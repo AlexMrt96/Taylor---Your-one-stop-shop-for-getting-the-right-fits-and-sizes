@@ -295,6 +295,20 @@ header{background:var(--ink);height:52px;display:flex;align-items:center;padding
 
 /* ── URL HINT ── */
 .ai-url-hint{font-size:10px;color:var(--ink3);margin-bottom:10px;padding:8px 12px;background:var(--paper2);border-radius:var(--rsm);border-left:3px solid var(--seam);line-height:1.5;}
+
+/* ── API KEY BANNER ── */
+.apikey-banner{background:rgba(200,169,110,.08);border-bottom:1px solid rgba(200,169,110,.2);padding:7px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.apikey-banner.hidden{display:none;}
+.apikey-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--seam);white-space:nowrap;}
+.apikey-inp{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(200,169,110,.25);border-radius:var(--rsm);padding:5px 9px;font-family:var(--ssf);font-size:11px;color:var(--paper);outline:none;min-width:0;transition:border-color .14s;}
+.apikey-inp::placeholder{color:var(--ink3);}
+.apikey-inp:focus{border-color:var(--seam);}
+.apikey-save{background:var(--seam);color:var(--ink);border:none;border-radius:var(--rsm);padding:5px 12px;font-family:var(--ssf);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all .14s;}
+.apikey-save:hover{background:var(--seam2);}
+.apikey-ok{font-size:10px;color:#6de8a0;display:flex;align-items:center;gap:5px;}
+.apikey-edit{background:none;border:none;font-size:9px;color:var(--ink3);cursor:pointer;text-decoration:underline;padding:0;}
+.apikey-edit:hover{color:var(--seam);}
+.apikey-hint{font-size:9px;color:var(--ink3);}
 </style>
 </head>
 <body>
@@ -406,6 +420,17 @@ header{background:var(--ink);height:52px;display:flex;align-items:center;padding
     <div class="ai-mode-tabs">
       <button class="ai-mode-tab active" id="ai-tab-search" onclick="switchAiMode('search')">🔍 Search by name</button>
       <button class="ai-mode-tab" id="ai-tab-url" onclick="switchAiMode('url')">🔗 Paste product URL</button>
+    </div>
+    <!-- api key banner -->
+    <div class="apikey-banner" id="apikey-banner">
+      <span class="apikey-lbl">API Key</span>
+      <input class="apikey-inp" id="apikey-inp" type="password" placeholder="sk-ant-…  (stored locally in your browser)">
+      <button class="apikey-save" onclick="saveApiKey()">Save</button>
+      <span class="apikey-hint">Get yours at <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--seam)">console.anthropic.com</a></span>
+    </div>
+    <div class="apikey-banner hidden" id="apikey-set-bar">
+      <span class="apikey-ok">✓ API key saved</span>
+      <button class="apikey-edit" onclick="editApiKey()">Change</button>
     </div>
     <div class="ai-modal-body">
       <!-- search mode -->
@@ -648,6 +673,7 @@ window.onload=()=>{
   renderFilters();
   renderCards();
   updateModalDims();
+  initApiKeyBanner();
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1429,6 +1455,14 @@ async function runAiLookup(){
     _aiLastResults=[];
     _aiFavSet.clear();
 
+    const apiKey = getApiKey();
+    if(!apiKey){
+      statusEl.innerHTML='';
+      resultsEl.innerHTML=`<div class="ai-error">⚠ Please enter your Anthropic API key above first.</div>`;
+      btn.disabled=false;
+      return;
+    }
+
     const systemPrompt=`You are a clothing measurements expert. The user will give you a clothing model name or search query.
 Search the web to find the official size measurements for that specific clothing item.
 Return ONLY a valid JSON array (no markdown, no explanation) with this exact structure:
@@ -1451,7 +1485,12 @@ Include all available sizes. Convert inches to cm (×2.54). Use only the dimensi
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
@@ -1540,6 +1579,32 @@ function addAiResult(idx, asFav){
 // ─────────────────────────────────────────────────────────────────────────────
 // AI MODE SWITCH
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// API KEY MANAGEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+function getApiKey(){ return localStorage.getItem('taylor_api_key')||''; }
+
+function saveApiKey(){
+  const val = document.getElementById('apikey-inp').value.trim();
+  if(!val){ alert('Please enter your Anthropic API key.'); return; }
+  localStorage.setItem('taylor_api_key', val);
+  document.getElementById('apikey-banner').classList.add('hidden');
+  document.getElementById('apikey-set-bar').classList.remove('hidden');
+}
+
+function editApiKey(){
+  document.getElementById('apikey-inp').value = getApiKey();
+  document.getElementById('apikey-banner').classList.remove('hidden');
+  document.getElementById('apikey-set-bar').classList.add('hidden');
+}
+
+function initApiKeyBanner(){
+  if(getApiKey()){
+    document.getElementById('apikey-banner').classList.add('hidden');
+    document.getElementById('apikey-set-bar').classList.remove('hidden');
+  }
+}
+
 function switchAiMode(mode){
   const isSearch = mode==='search';
   document.getElementById('ai-tab-search').classList.toggle('active', isSearch);
@@ -1575,6 +1640,14 @@ async function runUrlLookup(){
   resultsEl.innerHTML='';
   _aiLastResults=[];
   _aiFavSet.clear();
+
+  const apiKey = getApiKey();
+  if(!apiKey){
+    statusEl.innerHTML='';
+    resultsEl.innerHTML=`<div class="ai-error">⚠ Please enter your Anthropic API key above first.</div>`;
+    btn.disabled=false;
+    return;
+  }
 
   const systemPrompt=`You are a clothing measurements expert with web browsing ability.
 The user will give you a URL to a clothing product page.
@@ -1613,7 +1686,12 @@ Rules:
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
