@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taylor — Size Comparator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#181612;--ink2:#2e2b26;--ink3:#7a7568;--ink4:#b0a99e;
+  --paper:#f6f3ee;--paper2:#eceae3;--paper3:#e0ddd5;
+  --seam:#c8a96e;--seam2:#e0c78a;--seam3:rgba(200,169,110,.13);
+  --emerald:#2d7a4f;--crimson:#b83232;--sapphire:#1a4f7a;
+  --srf:'Cormorant Garamond',Georgia,serif;
+  --ssf:'Syne',system-ui,sans-serif;
+  --r:10px;--rsm:6px;
+  --sh:0 2px 16px rgba(24,22,18,.08),0 1px 3px rgba(24,22,18,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--ssf);background:var(--paper);color:var(--ink);font-size:13px;}
+
+/* ── HEADER ── */
+header{background:var(--ink);height:52px;display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;z-index:50;position:relative;}
+.logo{font-family:var(--srf);font-size:21px;color:var(--seam);font-weight:500;letter-spacing:.3px;white-space:nowrap;}
+.logo em{font-style:italic;}
+.hd-sep{width:1px;height:16px;background:rgba(255,255,255,.1);}
+.hd-sub{font-size:9px;color:var(--ink4);letter-spacing:2.5px;text-transform:uppercase;white-space:nowrap;}
+.hd-space{flex:1;}
+.cat-pills{display:flex;gap:4px;}
+.cat-pill{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:var(--ink4);background:transparent;transition:all .15s;white-space:nowrap;}
+.cat-pill.active{background:var(--seam);color:var(--ink);border-color:var(--seam);}
+.cat-pill:hover:not(.active){color:var(--paper2);background:rgba(255,255,255,.07);}
+.hd-btns{display:flex;gap:6px;}
+.hbtn{padding:5px 12px;border-radius:var(--rsm);font-family:var(--ssf);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.hbtn-seam{background:var(--seam);color:var(--ink);}
+.hbtn-seam:hover{background:var(--seam2);}
+.hbtn-ghost{background:rgba(255,255,255,.07);color:var(--ink4);border:1px solid rgba(255,255,255,.1);}
+.hbtn-ghost:hover{background:rgba(255,255,255,.12);color:var(--paper);}
+.hbtn-ghost.on{background:rgba(200,169,110,.18);color:var(--seam2);border-color:rgba(200,169,110,.3);}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:258px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--ink2);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;}
+.sb-head{padding:12px 14px 8px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);}
+.sb-title{font-family:var(--srf);font-size:11px;color:var(--seam);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.sb-search{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:var(--rsm);padding:6px 10px;}
+.sb-search input{background:none;border:none;outline:none;color:var(--paper);font-family:var(--ssf);font-size:11px;width:100%;}
+.sb-search input::placeholder{color:var(--ink4);}
+.sb-search svg{flex-shrink:0;opacity:.4;}
+.sb-filters{display:flex;gap:4px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.sb-filter{padding:3px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:var(--ink4);background:transparent;transition:all .12s;}
+.sb-filter.on{background:rgba(200,169,110,.15);color:var(--seam2);border-color:rgba(200,169,110,.3);}
+.sb-filter:hover:not(.on){color:var(--paper2);}
+
+/* ── SIDEBAR TABS ── */
+.sb-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.sb-tab{flex:1;padding:7px;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--ink4);border-bottom:2px solid transparent;transition:all .14s;}
+.sb-tab.active{color:var(--seam2);border-bottom-color:var(--seam);}
+
+/* ── CARD LIST ── */
+.card-list{flex:1;overflow-y:auto;padding:10px;}
+.card-list::-webkit-scrollbar{width:3px;}
+.card-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px;}
+.size-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);padding:10px 10px 9px 13px;margin-bottom:6px;cursor:grab;transition:all .16s;user-select:none;position:relative;overflow:hidden;}
+.size-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--seam));}
+.size-card:hover{background:rgba(255,255,255,.08);border-color:rgba(200,169,110,.3);transform:translateX(2px);}
+.size-card.dragging{opacity:.3;cursor:grabbing;}
+.size-card.fav-card{border-color:rgba(200,169,110,.25);background:rgba(200,169,110,.06);}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+.sc-left{min-width:0;}
+.sc-brand{font-size:8.5px;color:var(--cc,var(--seam));text-transform:uppercase;letter-spacing:1.8px;font-weight:700;margin-bottom:2px;}
+.sc-name{font-family:var(--srf);font-size:14px;color:var(--paper);font-weight:500;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:148px;}
+.sc-meta{font-size:9px;color:var(--ink4);margin-top:1px;}
+.sc-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.sc-size-badge{background:rgba(255,255,255,.08);color:var(--paper2);font-family:var(--srf);font-size:12px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.fav-btn{background:none;border:none;cursor:pointer;font-size:12px;opacity:.5;transition:all .15s;padding:0;line-height:1;}
+.fav-btn:hover{opacity:1;transform:scale(1.2);}
+.fav-btn.on{opacity:1;}
+.sc-dims{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px;}
+.sc-chip{font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--ink3);}
+.sb-empty{font-size:11px;color:var(--ink4);text-align:center;padding:24px 12px;font-style:italic;}
+.sb-add-btn{margin:0 10px 10px;padding:8px;border-radius:var(--rsm);border:1px dashed rgba(200,169,110,.2);background:transparent;color:var(--seam);font-family:var(--ssf);font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .14s;text-transform:uppercase;letter-spacing:.5px;}
+.sb-add-btn:hover{background:var(--seam3);border-color:var(--seam);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── COMPARE ZONE ── */
+.compare-zone{display:flex;flex:0 0 42%;min-height:0;max-height:42%;}
+.slot{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--paper3);min-width:0;overflow:hidden;}
+.slot:last-child{border-right:none;}
+.slot.drag-over{background:rgba(200,169,110,.05);}
+.slot-hd{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--paper3);background:#fff;flex-shrink:0;}
+.slot-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--ink4);}
+.slot-clear{background:none;border:none;cursor:pointer;font-size:10px;color:var(--ink4);padding:2px 5px;border-radius:3px;transition:all .12s;}
+.slot-clear:hover{color:var(--crimson);background:rgba(184,50,50,.08);}
+.slot-body{flex:1;overflow-y:auto;}
+.slot-body::-webkit-scrollbar{width:3px;}
+.slot-body::-webkit-scrollbar-thumb{background:var(--paper3);border-radius:3px;}
+.drop-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;opacity:.3;padding:20px;text-align:center;}
+.dp-icon{font-size:26px;}
+.dp-text{font-size:11px;color:var(--ink3);line-height:1.6;}
+.dp-text span{color:var(--seam);}
+
+/* ── GARMENT CARD in slot ── */
+.g-card{background:#fff;animation:fup .24s ease;}
+@keyframes fup{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.g-card-hd{padding:10px 12px 8px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--paper2);}
+.g-brand{font-size:8px;color:var(--seam);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.g-name{font-family:var(--srf);font-size:16px;color:var(--ink);font-weight:500;line-height:1.2;margin-top:1px;}
+.g-badge{background:var(--ink);color:var(--seam);font-family:var(--srf);font-size:14px;font-weight:600;min-width:36px;height:36px;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;margin-left:8px;}
+.rm-btn{position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;background:var(--paper2);border:none;cursor:pointer;font-size:10px;color:var(--ink3);display:flex;align-items:center;justify-content:center;transition:all .13s;z-index:5;}
+.rm-btn:hover{background:var(--crimson);color:#fff;}
+
+/* ── VISUAL ── */
+.g-visual{background:linear-gradient(160deg,var(--paper) 0%,#fff 100%);padding:14px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--paper2);}
+
+/* ── DIMS ── */
+.g-dims{padding:10px 12px;}
+.g-dims-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.g-dims-count{font-size:8px;color:var(--ink4);}
+.edit-lbl{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--ink3);cursor:pointer;}
+.edit-lbl input{accent-color:var(--seam);width:12px;height:12px;}
+.dim-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--paper2);}
+.dim-row:last-child{border-bottom:none;}
+.dim-lbl{font-size:10px;color:var(--ink3);width:76px;flex-shrink:0;}
+.dim-bar-wrap{flex:1;height:4px;background:var(--paper2);border-radius:3px;overflow:hidden;}
+.dim-bar{height:100%;border-radius:3px;transition:width .4s cubic-bezier(.22,1,.36,1);}
+.dim-val{font-size:10px;font-weight:600;color:var(--ink2);width:44px;text-align:right;}
+.dim-inp{width:48px;padding:2px 5px;background:var(--paper2);border:1px solid var(--paper3);border-radius:3px;font-family:var(--ssf);font-size:10px;color:var(--ink);outline:none;text-align:right;display:none;}
+.dim-inp:focus{border-color:var(--seam);background:#fff;}
+.add-fav-slot-btn{margin:8px 12px 10px;width:calc(100% - 24px);padding:6px;border-radius:var(--rsm);border:1px dashed rgba(200,169,110,.3);background:transparent;color:var(--seam);font-family:var(--ssf);font-size:9px;font-weight:700;cursor:pointer;text-align:center;transition:all .14s;text-transform:uppercase;letter-spacing:.5px;}
+.add-fav-slot-btn:hover{background:var(--seam3);}
+
+/* ── SIZE SWITCHER ── */
+.size-switcher{padding:8px 12px;background:var(--paper2);border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.size-sw-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink3);font-weight:700;flex-shrink:0;}
+.size-sw-pills{display:flex;gap:4px;flex-wrap:wrap;flex:1;}
+.size-sw-pill{padding:4px 10px;border-radius:16px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--paper3);background:#fff;color:var(--ink3);transition:all .14s;font-family:var(--ssf);}
+.size-sw-pill:hover:not(.active){border-color:var(--seam);color:var(--seam);}
+.size-sw-pill.active{background:var(--ink);color:var(--seam);border-color:var(--ink);}
+.size-sw-notif{font-size:9px;color:var(--emerald);font-weight:700;animation:fup .3s ease;padding:2px 0;}
+
+/* ── MATCH SCORE BAR ── */
+.match-bar-wrap{padding:10px 12px;background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 100%);border-top:none;animation:fup .3s ease;}
+.mb-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--seam);margin-bottom:6px;font-weight:700;}
+.mb-score-row{display:flex;align-items:center;gap:10px;}
+.mb-number{font-family:var(--srf);font-size:28px;font-weight:700;line-height:1;min-width:52px;}
+.mb-bar-col{flex:1;}
+.mb-track{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-bottom:5px;}
+.mb-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.22,1,.36,1);}
+.mb-verdict{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.mb-breakdown{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.mb-chip{font-size:9px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.07);color:var(--ink4);}
+.mb-chip.good{color:#6de8a0;background:rgba(93,186,138,.1);}
+.mb-chip.ok{color:var(--seam2);background:rgba(200,169,110,.1);}
+.mb-chip.bad{color:#f08080;background:rgba(224,123,112,.1);}
+
+/* ── BOTTOM PANEL ── */
+.bottom-panel{flex:1;min-height:0;background:var(--ink);border-top:2px solid rgba(200,169,110,.18);display:flex;flex-direction:column;}
+.bp-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.bp-tab{padding:8px 16px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--ink4);border-bottom:2px solid transparent;transition:all .14s;}
+.bp-tab.active{color:var(--seam2);border-bottom-color:var(--seam);}
+.bp-tab:hover:not(.active){color:var(--ink4);}
+.bp-body{flex:1;overflow:auto;padding:12px 20px;}
+.bp-body::-webkit-scrollbar{height:3px;width:3px;}
+.bp-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
+
+/* ── DIFF TABLE ── */
+.dtbl{border-collapse:collapse;min-width:420px;}
+.dtbl th{font-size:8.5px;text-transform:uppercase;letter-spacing:1px;color:var(--ink4);font-weight:600;padding:5px 12px 5px 0;border-bottom:1px solid rgba(255,255,255,.1);text-align:right;white-space:nowrap;}
+.dtbl th:first-child{text-align:left;}
+.dtbl td{padding:7px 12px 7px 0;font-size:11px;color:var(--ink4);border-bottom:1px solid rgba(255,255,255,.04);text-align:right;white-space:nowrap;}
+.dtbl td:first-child{color:var(--paper2);text-align:left;}
+.dtbl tr:last-child td{border-bottom:none;}
+.d-pos{color:#6de8a0;font-weight:700;}
+.d-neg{color:#f08080;font-weight:700;}
+.d-zero{color:var(--ink3);}
+
+/* ── CHIPS ── */
+.chips-wrap{display:flex;gap:8px;flex-wrap:wrap;}
+.d-chip{border-radius:var(--rsm);padding:8px 12px;min-width:96px;border:1px solid transparent;}
+.d-chip.pos{border-color:rgba(93,186,138,.25);background:rgba(93,186,138,.07);}
+.d-chip.neg{border-color:rgba(224,123,112,.25);background:rgba(224,123,112,.07);}
+.d-chip.zero{border-color:rgba(255,255,255,.07);background:rgba(255,255,255,.03);}
+.d-chip-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink4);margin-bottom:3px;}
+.d-chip-val{font-family:var(--srf);font-size:17px;font-weight:600;}
+.d-chip-val.pos{color:#6de8a0;}
+.d-chip-val.neg{color:#f08080;}
+.d-chip-val.zero{color:var(--ink3);}
+.d-chip-dir{font-size:8.5px;margin-top:1px;}
+.d-chip-dir.pos{color:#6de8a0;}
+.d-chip-dir.neg{color:#f08080;}
+.d-chip-dir.zero{color:var(--ink3);}
+.no-data{font-size:11px;color:var(--ink3);font-style:italic;}
+
+/* ── OVERLAY VISUAL ── */
+.ov-wrap{display:flex;align-items:flex-end;justify-content:center;gap:0;min-height:160px;position:relative;flex:1;}
+.ov-legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);}
+.ov-leg-item{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--ink4);}
+.ov-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(24,22,18,.75);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;}
+.modal-ov.open{opacity:1;pointer-events:all;}
+.modal{background:var(--paper);border:1px solid var(--paper3);border-radius:var(--r);padding:22px;max-width:520px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 12px 48px rgba(24,22,18,.18);transform:translateY(10px);transition:transform .18s;}
+.modal-ov.open .modal{transform:translateY(0);}
+.modal::-webkit-scrollbar{width:3px;}
+.modal::-webkit-scrollbar-thumb{background:var(--paper3);}
+.modal-title{font-family:var(--srf);font-size:24px;color:var(--ink);margin-bottom:16px;}
+.inp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.inp-grp{display:flex;flex-direction:column;gap:3px;}
+.inp-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);}
+.inp{padding:7px 10px;background:#fff;border:1px solid var(--paper3);border-radius:var(--rsm);font-family:var(--ssf);font-size:12px;color:var(--ink);outline:none;transition:border-color .14s;width:100%;}
+.inp:focus{border-color:var(--seam);}
+.dim-section-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);margin:10px 0 6px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:var(--rsm);font-family:var(--ssf);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .14s;text-transform:uppercase;}
+.btn-ink{background:var(--ink);color:var(--seam);}
+.btn-ink:hover{background:var(--ink2);}
+.btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--paper3);}
+.btn-ghost:hover{background:var(--paper2);}
+
+/* ── AI LOOKUP (sidebar top) ── */
+.sb-ai-section{padding:10px 12px 10px;border-bottom:2px solid rgba(200,169,110,.18);background:rgba(200,169,110,.06);flex-shrink:0;}
+.sb-ai-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--seam);margin-bottom:7px;}
+.sb-ai-row{display:flex;gap:6px;}
+.sb-ai-inp{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(200,169,110,.22);border-radius:var(--rsm);padding:6px 9px;font-family:var(--ssf);font-size:11px;color:var(--paper);outline:none;min-width:0;transition:border-color .15s;}
+.sb-ai-inp::placeholder{color:var(--ink3);}
+.sb-ai-inp:focus{border-color:var(--seam);background:rgba(255,255,255,.1);}
+.sb-ai-btn{background:var(--seam);color:var(--ink);border:none;border-radius:var(--rsm);padding:6px 11px;font-family:var(--ssf);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .14s;white-space:nowrap;flex-shrink:0;}
+.sb-ai-btn:hover{background:var(--seam2);}
+
+/* ── AI RESULT CARD fav button ── */
+.ai-rc-fav{background:none;border:1px solid rgba(200,169,110,.3);border-radius:var(--rsm);padding:5px 8px;font-size:12px;cursor:pointer;transition:all .15s;line-height:1;flex-shrink:0;}
+.ai-rc-fav:hover{background:rgba(200,169,110,.12);transform:scale(1.1);}
+.ai-rc-fav.on{background:rgba(200,169,110,.18);border-color:var(--seam);}
+
+/* ── AI LOOKUP bar (old, keep for compat but hide) ── */
+.ai-lookup-bar{display:none;}
+
+.ai-modal-ov{position:fixed;inset:0;background:rgba(24,22,18,.8);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;}
+.ai-modal-ov.open{opacity:1;pointer-events:all;}
+.ai-modal{background:var(--paper);border:1px solid var(--paper3);border-radius:var(--r);padding:0;max-width:560px;width:94%;max-height:86vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 56px rgba(24,22,18,.22);transform:translateY(12px);transition:transform .18s;}
+.ai-modal-ov.open .ai-modal{transform:translateY(0);}
+.ai-modal-hd{padding:18px 20px 14px;border-bottom:1px solid var(--paper3);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0;}
+.ai-modal-title{font-family:var(--srf);font-size:22px;color:var(--ink);font-weight:500;}
+.ai-modal-sub{font-size:10px;color:var(--ink3);margin-top:2px;}
+.ai-modal-close{background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink3);padding:2px;line-height:1;transition:color .12s;}
+.ai-modal-close:hover{color:var(--crimson);}
+.ai-modal-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.ai-modal-body::-webkit-scrollbar{width:3px;}
+.ai-modal-body::-webkit-scrollbar-thumb{background:var(--paper3);}
+
+.ai-search-row{display:flex;gap:8px;margin-bottom:14px;}
+.ai-search-inp{flex:1;padding:8px 12px;background:#fff;border:1px solid var(--paper3);border-radius:var(--rsm);font-family:var(--ssf);font-size:12px;color:var(--ink);outline:none;transition:border-color .14s;}
+.ai-search-inp:focus{border-color:var(--seam);}
+.ai-search-btn{padding:8px 16px;background:var(--ink);color:var(--seam);border:none;border-radius:var(--rsm);font-family:var(--ssf);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .14s;white-space:nowrap;}
+.ai-search-btn:hover:not(:disabled){background:var(--ink2);}
+.ai-search-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.ai-status{font-size:11px;color:var(--ink3);font-style:italic;padding:4px 0 10px;min-height:20px;display:flex;align-items:center;gap:7px;}
+.ai-spinner{width:12px;height:12px;border:2px solid var(--paper3);border-top-color:var(--seam);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.ai-results{display:flex;flex-direction:column;gap:10px;}
+.ai-result-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden;transition:border-color .15s;}
+.ai-result-card:hover{border-color:var(--seam);}
+.ai-rc-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--paper2);gap:10px;}
+.ai-rc-left{}
+.ai-rc-brand{font-size:8px;color:var(--seam);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.ai-rc-name{font-family:var(--srf);font-size:16px;color:var(--ink);font-weight:500;margin-top:1px;}
+.ai-rc-meta{font-size:9px;color:var(--ink4);margin-top:1px;}
+.ai-rc-right{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.ai-rc-size{background:var(--ink);color:var(--seam);font-family:var(--srf);font-size:13px;font-weight:600;padding:3px 10px;border-radius:var(--rsm);}
+.ai-rc-add{background:var(--seam);color:var(--ink);border:none;border-radius:var(--rsm);padding:5px 12px;font-family:var(--ssf);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .14s;}
+.ai-rc-add:hover{background:var(--seam2);}
+.ai-rc-dims{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;}
+.ai-rc-dim{background:var(--paper2);border-radius:4px;padding:4px 8px;}
+.ai-rc-dim-lbl{font-size:8px;color:var(--ink4);text-transform:uppercase;letter-spacing:.8px;}
+.ai-rc-dim-val{font-size:12px;font-weight:700;color:var(--ink2);font-family:var(--srf);}
+.ai-rc-source{font-size:9px;color:var(--ink4);padding:0 14px 10px;font-style:italic;}
+
+.ai-empty{text-align:center;padding:28px 20px;color:var(--ink3);font-size:11px;font-style:italic;}
+.ai-error{background:rgba(184,50,50,.07);border:1px solid rgba(184,50,50,.2);border-radius:var(--rsm);padding:10px 14px;font-size:11px;color:var(--crimson);}
+
+/* ── AI MODE TABS ── */
+.ai-mode-tabs{display:flex;border-bottom:1px solid var(--paper3);flex-shrink:0;}
+.ai-mode-tab{flex:1;padding:9px 12px;font-family:var(--ssf);font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--ink3);border-bottom:2px solid transparent;transition:all .15s;}
+.ai-mode-tab.active{color:var(--seam);border-bottom-color:var(--seam);background:rgba(200,169,110,.04);}
+.ai-mode-tab:hover:not(.active){color:var(--ink2);background:var(--paper2);}
+
+/* ── URL HINT ── */
+.ai-url-hint{font-size:10px;color:var(--ink3);margin-bottom:10px;padding:8px 12px;background:var(--paper2);border-radius:var(--rsm);border-left:3px solid var(--seam);line-height:1.5;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Taylor <em>Size</em></div>
+  <div class="hd-sep"></div>
+  <div class="hd-sub">Comparator</div>
+  <div class="hd-space"></div>
+  <div class="cat-pills">
+    <button class="cat-pill active" onclick="switchCat('top',this)">Tops</button>
+    <button class="cat-pill" onclick="switchCat('bottom',this)">Bottoms</button>
+    <button class="cat-pill" onclick="switchCat('shoe',this)">Shoes</button>
+    <button class="cat-pill" onclick="switchCat('jacket',this)">Jackets</button>
+    <button class="cat-pill" onclick="switchCat('dress',this)">Dresses</button>
+  </div>
+  <div class="hd-sep"></div>
+  <div class="hd-btns">
+    <button class="hbtn hbtn-ghost" id="fav-toggle-btn" onclick="toggleFavView()">⭐ My Wardrobe</button>
+    <button class="hbtn hbtn-seam" onclick="openModal()">+ Add Custom</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <!-- AI LOOKUP — top of sidebar -->
+    <div class="sb-ai-section">
+      <div class="sb-ai-label">✦ AI Size Lookup</div>
+      <div class="sb-ai-row">
+        <input class="sb-ai-inp" id="ai-quick-inp" type="text" placeholder="e.g. Levi's 514, Nike Dri-FIT M…" onkeydown="if(event.key==='Enter')openAiModal(this.value)">
+        <button class="sb-ai-btn" onclick="openAiModal(document.getElementById('ai-quick-inp').value)">Search</button>
+      </div>
+    </div>
+    <div class="sb-head">
+      <div class="sb-title" id="sb-title">Brand Library</div>
+      <div class="sb-search">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.3"/><line x1="8" y1="8" x2="11" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="Search brand or product…" id="sb-search-inp" oninput="filterCards(this.value)">
+      </div>
+    </div>
+    <div class="sb-filters" id="sb-filters"></div>
+    <div class="sb-tabs">
+      <div class="sb-tab active" id="tab-all" onclick="switchSbTab('all')">All</div>
+      <div class="sb-tab" id="tab-fav" onclick="switchSbTab('fav')">⭐ Wardrobe</div>
+    </div>
+    <div class="card-list" id="card-list"></div>
+    <button class="sb-add-btn" onclick="openModal()">+ Add Custom Size</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- COMPARE ZONE -->
+    <div class="compare-zone" id="compare-zone">
+      <div class="slot" id="slot-0" ondragover="ev(event,0)" ondragleave="lv(0)" ondrop="dp(event,0)">
+        <div class="slot-hd"><span class="slot-label">Size A</span><button class="slot-clear" onclick="rmSlot(0)">Clear</button></div>
+        <div class="slot-body">
+          <div class="drop-ph" id="ph-0"><div class="dp-icon">👕</div><div class="dp-text">Drag here or click a card<br><span>from the library</span></div></div>
+          <div id="slot-0-cnt"></div>
+        </div>
+      </div>
+      <div class="slot" id="slot-1" ondragover="ev(event,1)" ondragleave="lv(1)" ondrop="dp(event,1)">
+        <div class="slot-hd"><span class="slot-label">Size B</span><button class="slot-clear" onclick="rmSlot(1)">Clear</button></div>
+        <div class="slot-body">
+          <div class="drop-ph" id="ph-1"><div class="dp-icon">👔</div><div class="dp-text">Drag a second size<br><span>to compare</span></div></div>
+          <div id="slot-1-cnt"></div>
+        </div>
+      </div>
+      <div class="slot" id="slot-2" ondragover="ev(event,2)" ondragleave="lv(2)" ondrop="dp(event,2)">
+        <div class="slot-hd"><span class="slot-label">Size C</span><button class="slot-clear" onclick="rmSlot(2)">Clear</button></div>
+        <div class="slot-body">
+          <div class="drop-ph" id="ph-2"><div class="dp-icon">🧥</div><div class="dp-text">Optional third size<br><span>multi-compare</span></div></div>
+          <div id="slot-2-cnt"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM PANEL -->
+    <div class="bottom-panel">
+      <div class="bp-tabs">
+        <div class="bp-tab active" onclick="switchBpTab('visual',this)">Visual Overlay</div>
+        <div class="bp-tab" onclick="switchBpTab('diff',this)">Diff Table</div>
+        <div class="bp-tab" onclick="switchBpTab('chips',this)">Key Differences</div>
+        <div class="bp-tab" onclick="switchBpTab('match',this)">Match Score</div>
+      </div>
+      <div class="bp-body" id="bp-visual"><div class="ov-wrap" id="ov-inner"><div class="no-data" style="margin:auto">Add sizes above to compare</div></div></div>
+      <div class="bp-body" id="bp-diff" style="display:none"><div id="diff-inner"><div class="no-data">Add two sizes to compare</div></div></div>
+      <div class="bp-body" id="bp-chips" style="display:none"><div class="chips-wrap" id="chips-inner"><div class="no-data">Add two sizes to compare</div></div></div>
+      <div class="bp-body" id="bp-match" style="display:none"><div id="match-inner"><div class="no-data">Add two sizes to see match score</div></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AI LOOKUP MODAL -->
+<div class="ai-modal-ov" id="ai-modal" onclick="if(event.target===this)closeAiModal()">
+  <div class="ai-modal">
+    <div class="ai-modal-hd">
+      <div>
+        <div class="ai-modal-title">✦ AI Size Lookup</div>
+        <div class="ai-modal-sub">Search by name or paste a product URL — Claude scrapes measurements automatically</div>
+      </div>
+      <button class="ai-modal-close" onclick="closeAiModal()">✕</button>
+    </div>
+    <!-- mode tabs -->
+    <div class="ai-mode-tabs">
+      <button class="ai-mode-tab active" id="ai-tab-search" onclick="switchAiMode('search')">🔍 Search by name</button>
+      <button class="ai-mode-tab" id="ai-tab-url" onclick="switchAiMode('url')">🔗 Paste product URL</button>
+    </div>
+    <div class="ai-modal-body">
+      <!-- search mode -->
+      <div id="ai-pane-search">
+        <div class="ai-search-row">
+          <input class="ai-search-inp" id="ai-modal-inp" type="text" placeholder="e.g. Nike Air Force 1, Levi's 501 32×32, Zara Linen Shirt M…" onkeydown="if(event.key==='Enter')runAiLookup()">
+          <button class="ai-search-btn" id="ai-search-btn" onclick="runAiLookup()">Search</button>
+        </div>
+      </div>
+      <!-- url mode -->
+      <div id="ai-pane-url" style="display:none">
+        <div class="ai-url-hint">Paste a link to any product page — e.g. from Zara, Nike, ASOS, Levi's…</div>
+        <div class="ai-search-row">
+          <input class="ai-search-inp" id="ai-url-inp" type="url" placeholder="https://www.zara.com/fr/fr/chemise-en-lin-p…" onkeydown="if(event.key==='Enter')runUrlLookup()">
+          <button class="ai-search-btn" id="ai-url-btn" onclick="runUrlLookup()">Scrape</button>
+        </div>
+      </div>
+      <div class="ai-status" id="ai-status"></div>
+      <div id="ai-results"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="add-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">Add a Size</div>
+    <div class="inp-grid">
+      <div class="inp-grp"><label class="inp-lbl">Brand</label><input class="inp" id="f-brand" placeholder="e.g. Zara"></div>
+      <div class="inp-grp"><label class="inp-lbl">Product Name</label><input class="inp" id="f-name" placeholder="e.g. Slim Shirt"></div>
+      <div class="inp-grp"><label class="inp-lbl">Size Label</label><input class="inp" id="f-size" placeholder="e.g. M, US 10, 32×32"></div>
+      <div class="inp-grp"><label class="inp-lbl">Category</label>
+        <select class="inp" id="f-cat" onchange="updateModalDims()">
+          <option value="top">Top / Shirt</option>
+          <option value="bottom">Bottom / Pants</option>
+          <option value="shoe">Shoes</option>
+          <option value="jacket">Jacket / Coat</option>
+          <option value="dress">Dress</option>
+        </select>
+      </div>
+    </div>
+    <div class="dim-section-lbl">Measurements (cm)</div>
+    <div id="modal-dims" class="inp-grid"></div>
+    <div class="inp-grp" style="margin-top:8px">
+      <label class="inp-lbl">Add to My Wardrobe (already own & fits)</label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:4px">
+        <input type="checkbox" id="f-fav" style="accent-color:var(--seam);width:14px;height:14px">
+        <span style="font-size:11px;color:var(--ink3)">Yes, this fits me — save to wardrobe</span>
+      </label>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ink" onclick="addCustomSize()">Add to Library</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const DIM_DEFS={
+  top:['Chest','Shoulder','Length','Sleeve','Hem'],
+  bottom:['Waist','Hip','Inseam','Thigh','Leg Opening'],
+  shoe:['Length','Width','Heel Height','Toe Box'],
+  jacket:['Chest','Shoulder','Length','Sleeve','Hem','Back Width'],
+  dress:['Chest','Waist','Hip','Length','Shoulder']
+};
+
+const PAL=['#c8a96e','#5dba8a','#7ba7d4','#e07b70','#a78bfa','#f0a070','#56b8c8','#d4a8e0','#e8c547','#80cbc4'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MASSIVE CATALOG — 120+ items across all categories and brands
+// ─────────────────────────────────────────────────────────────────────────────
+const CATALOG=[
+  // ── TOPS ── Nike
+  {id:'t001',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'XS',retailer:'Nike.com',color:PAL[3],dims:{Chest:88,Shoulder:40,Length:64,Sleeve:19,Hem:84}},
+  {id:'t002',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'S',retailer:'Nike.com',color:PAL[0],dims:{Chest:94,Shoulder:42,Length:67,Sleeve:20,Hem:90}},
+  {id:'t003',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'M',retailer:'Nike.com',color:PAL[1],dims:{Chest:100,Shoulder:44,Length:70,Sleeve:21,Hem:96}},
+  {id:'t004',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'L',retailer:'Nike.com',color:PAL[2],dims:{Chest:108,Shoulder:46,Length:73,Sleeve:22,Hem:104}},
+  {id:'t005',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'XL',retailer:'Nike.com',color:PAL[4],dims:{Chest:116,Shoulder:49,Length:76,Sleeve:23,Hem:112}},
+  {id:'t006',cat:'top',brand:'Nike',name:'Dri-FIT Tee',size:'2XL',retailer:'Nike.com',color:PAL[5],dims:{Chest:124,Shoulder:52,Length:79,Sleeve:24,Hem:120}},
+  // Adidas
+  {id:'t011',cat:'top',brand:'Adidas',name:'Essentials Tee',size:'S',retailer:'Adidas.com',color:PAL[0],dims:{Chest:92,Shoulder:41,Length:68,Sleeve:20,Hem:88}},
+  {id:'t012',cat:'top',brand:'Adidas',name:'Essentials Tee',size:'M',retailer:'Adidas.com',color:PAL[1],dims:{Chest:98,Shoulder:43,Length:71,Sleeve:21,Hem:94}},
+  {id:'t013',cat:'top',brand:'Adidas',name:'Essentials Tee',size:'L',retailer:'Adidas.com',color:PAL[2],dims:{Chest:106,Shoulder:45,Length:74,Sleeve:22,Hem:102}},
+  {id:'t014',cat:'top',brand:'Adidas',name:'Essentials Tee',size:'XL',retailer:'Adidas.com',color:PAL[3],dims:{Chest:114,Shoulder:48,Length:77,Sleeve:23,Hem:110}},
+  {id:'t015',cat:'top',brand:'Adidas',name:'3-Stripe Tee',size:'M',retailer:'Adidas.com',color:PAL[4],dims:{Chest:102,Shoulder:44,Length:72,Sleeve:21,Hem:98}},
+  {id:'t016',cat:'top',brand:'Adidas',name:'3-Stripe Tee',size:'L',retailer:'Adidas.com',color:PAL[5],dims:{Chest:110,Shoulder:46,Length:75,Sleeve:22,Hem:106}},
+  // Zara
+  {id:'t021',cat:'top',brand:'Zara',name:'Linen Shirt',size:'S',retailer:'Zara.com',color:PAL[6],dims:{Chest:98,Shoulder:43,Length:71,Sleeve:62,Hem:96}},
+  {id:'t022',cat:'top',brand:'Zara',name:'Linen Shirt',size:'M',retailer:'Zara.com',color:PAL[0],dims:{Chest:104,Shoulder:45,Length:74,Sleeve:63,Hem:102}},
+  {id:'t023',cat:'top',brand:'Zara',name:'Linen Shirt',size:'L',retailer:'Zara.com',color:PAL[1],dims:{Chest:110,Shoulder:47,Length:77,Sleeve:64,Hem:108}},
+  {id:'t024',cat:'top',brand:'Zara',name:'Slim Oxford',size:'M',retailer:'Zara.com',color:PAL[2],dims:{Chest:100,Shoulder:44,Length:72,Sleeve:62,Hem:98}},
+  {id:'t025',cat:'top',brand:'Zara',name:'Slim Oxford',size:'L',retailer:'Zara.com',color:PAL[3],dims:{Chest:106,Shoulder:46,Length:75,Sleeve:63,Hem:104}},
+  // H&M
+  {id:'t031',cat:'top',brand:'H&M',name:'Regular Tee',size:'S',retailer:'hm.com',color:PAL[7],dims:{Chest:90,Shoulder:41,Length:66,Sleeve:19,Hem:88}},
+  {id:'t032',cat:'top',brand:'H&M',name:'Regular Tee',size:'M',retailer:'hm.com',color:PAL[0],dims:{Chest:97,Shoulder:43,Length:69,Sleeve:20,Hem:95}},
+  {id:'t033',cat:'top',brand:'H&M',name:'Regular Tee',size:'L',retailer:'hm.com',color:PAL[1],dims:{Chest:105,Shoulder:45,Length:72,Sleeve:21,Hem:103}},
+  {id:'t034',cat:'top',brand:'H&M',name:'Regular Tee',size:'XL',retailer:'hm.com',color:PAL[2],dims:{Chest:113,Shoulder:48,Length:75,Sleeve:22,Hem:111}},
+  {id:'t035',cat:'top',brand:'H&M',name:'Slim Fit Shirt',size:'M',retailer:'hm.com',color:PAL[3],dims:{Chest:99,Shoulder:43,Length:73,Sleeve:63,Hem:97}},
+  // ASOS
+  {id:'t041',cat:'top',brand:'ASOS',name:'Slim Tee',size:'S',retailer:'asos.com',color:PAL[4],dims:{Chest:91,Shoulder:41,Length:67,Sleeve:19,Hem:89}},
+  {id:'t042',cat:'top',brand:'ASOS',name:'Slim Tee',size:'M',retailer:'asos.com',color:PAL[5],dims:{Chest:97,Shoulder:43,Length:70,Sleeve:20,Hem:95}},
+  {id:'t043',cat:'top',brand:'ASOS',name:'Slim Tee',size:'L',retailer:'asos.com',color:PAL[6],dims:{Chest:104,Shoulder:45,Length:73,Sleeve:21,Hem:102}},
+  {id:'t044',cat:'top',brand:'ASOS',name:'Oversized Tee',size:'M',retailer:'asos.com',color:PAL[7],dims:{Chest:114,Shoulder:50,Length:76,Sleeve:22,Hem:112}},
+  {id:'t045',cat:'top',brand:'ASOS',name:'Oversized Tee',size:'L',retailer:'asos.com',color:PAL[0],dims:{Chest:122,Shoulder:53,Length:79,Sleeve:23,Hem:120}},
+  // Uniqlo
+  {id:'t051',cat:'top',brand:'Uniqlo',name:'Supima Cotton Tee',size:'S',retailer:'uniqlo.com',color:PAL[1],dims:{Chest:93,Shoulder:42,Length:68,Sleeve:20,Hem:91}},
+  {id:'t052',cat:'top',brand:'Uniqlo',name:'Supima Cotton Tee',size:'M',retailer:'uniqlo.com',color:PAL[2],dims:{Chest:99,Shoulder:44,Length:71,Sleeve:21,Hem:97}},
+  {id:'t053',cat:'top',brand:'Uniqlo',name:'Supima Cotton Tee',size:'L',retailer:'uniqlo.com',color:PAL[3],dims:{Chest:106,Shoulder:46,Length:74,Sleeve:22,Hem:104}},
+  {id:'t054',cat:'top',brand:'Uniqlo',name:'Oxford Shirt',size:'M',retailer:'uniqlo.com',color:PAL[4],dims:{Chest:103,Shoulder:45,Length:74,Sleeve:63,Hem:101}},
+  {id:'t055',cat:'top',brand:'Uniqlo',name:'Oxford Shirt',size:'L',retailer:'uniqlo.com',color:PAL[5],dims:{Chest:110,Shoulder:47,Length:77,Sleeve:64,Hem:108}},
+  // GAP
+  {id:'t061',cat:'top',brand:'GAP',name:'Soft Cotton Tee',size:'S',retailer:'gap.com',color:PAL[6],dims:{Chest:94,Shoulder:42,Length:67,Sleeve:20,Hem:92}},
+  {id:'t062',cat:'top',brand:'GAP',name:'Soft Cotton Tee',size:'M',retailer:'gap.com',color:PAL[7],dims:{Chest:100,Shoulder:44,Length:70,Sleeve:21,Hem:98}},
+  {id:'t063',cat:'top',brand:'GAP',name:'Soft Cotton Tee',size:'L',retailer:'gap.com',color:PAL[0],dims:{Chest:107,Shoulder:46,Length:73,Sleeve:22,Hem:105}},
+  // Ralph Lauren
+  {id:'t071',cat:'top',brand:'Ralph Lauren',name:'Polo Shirt',size:'S',retailer:'ralphlauren.com',color:PAL[1],dims:{Chest:97,Shoulder:43,Length:70,Sleeve:22,Hem:95}},
+  {id:'t072',cat:'top',brand:'Ralph Lauren',name:'Polo Shirt',size:'M',retailer:'ralphlauren.com',color:PAL[2],dims:{Chest:103,Shoulder:45,Length:73,Sleeve:23,Hem:101}},
+  {id:'t073',cat:'top',brand:'Ralph Lauren',name:'Polo Shirt',size:'L',retailer:'ralphlauren.com',color:PAL[3],dims:{Chest:110,Shoulder:47,Length:76,Sleeve:24,Hem:108}},
+  // COS
+  {id:'t081',cat:'top',brand:'COS',name:'Relaxed Shirt',size:'S',retailer:'cosstores.com',color:PAL[4],dims:{Chest:104,Shoulder:46,Length:74,Sleeve:63,Hem:102}},
+  {id:'t082',cat:'top',brand:'COS',name:'Relaxed Shirt',size:'M',retailer:'cosstores.com',color:PAL[5],dims:{Chest:111,Shoulder:48,Length:77,Sleeve:64,Hem:109}},
+  // Mango
+  {id:'t091',cat:'top',brand:'Mango',name:'Slim Shirt',size:'S',retailer:'mango.com',color:PAL[6],dims:{Chest:96,Shoulder:43,Length:71,Sleeve:62,Hem:94}},
+  {id:'t092',cat:'top',brand:'Mango',name:'Slim Shirt',size:'M',retailer:'mango.com',color:PAL[7],dims:{Chest:102,Shoulder:45,Length:74,Sleeve:63,Hem:100}},
+  // Stone Island
+  {id:'t101',cat:'top',brand:'Stone Island',name:'Logo Tee',size:'M',retailer:'stoneisland.com',color:PAL[0],dims:{Chest:104,Shoulder:46,Length:72,Sleeve:21,Hem:102}},
+  {id:'t102',cat:'top',brand:'Stone Island',name:'Logo Tee',size:'L',retailer:'stoneisland.com',color:PAL[1],dims:{Chest:112,Shoulder:48,Length:75,Sleeve:22,Hem:110}},
+
+  // ── BOTTOMS ──
+  {id:'b001',cat:'bottom',brand:"Levi's",name:'511 Slim',size:'28×30',retailer:"levis.com",color:PAL[0],dims:{Waist:71,Hip:90,Inseam:76,Thigh:54,'Leg Opening':33}},
+  {id:'b002',cat:'bottom',brand:"Levi's",name:'511 Slim',size:'30×30',retailer:"levis.com",color:PAL[1],dims:{Waist:76,Hip:94,Inseam:76,Thigh:56,'Leg Opening':34}},
+  {id:'b003',cat:'bottom',brand:"Levi's",name:'511 Slim',size:'32×32',retailer:"levis.com",color:PAL[2],dims:{Waist:81,Hip:98,Inseam:81,Thigh:58,'Leg Opening':35}},
+  {id:'b004',cat:'bottom',brand:"Levi's",name:'511 Slim',size:'34×32',retailer:"levis.com",color:PAL[3],dims:{Waist:86,Hip:104,Inseam:81,Thigh:62,'Leg Opening':36}},
+  {id:'b005',cat:'bottom',brand:"Levi's",name:'501 Original',size:'30×30',retailer:"levis.com",color:PAL[4],dims:{Waist:78,Hip:100,Inseam:76,Thigh:60,'Leg Opening':37}},
+  {id:'b006',cat:'bottom',brand:"Levi's",name:'501 Original',size:'32×32',retailer:"levis.com",color:PAL[5],dims:{Waist:83,Hip:105,Inseam:81,Thigh:63,'Leg Opening':38}},
+  {id:'b011',cat:'bottom',brand:'H&M',name:'Slim Chinos',size:'30',retailer:'hm.com',color:PAL[6],dims:{Waist:76,Hip:96,Inseam:78,Thigh:57,'Leg Opening':35}},
+  {id:'b012',cat:'bottom',brand:'H&M',name:'Slim Chinos',size:'32',retailer:'hm.com',color:PAL[7],dims:{Waist:82,Hip:100,Inseam:78,Thigh:60,'Leg Opening':36}},
+  {id:'b013',cat:'bottom',brand:'H&M',name:'Slim Chinos',size:'34',retailer:'hm.com',color:PAL[0],dims:{Waist:88,Hip:106,Inseam:80,Thigh:63,'Leg Opening':37}},
+  {id:'b021',cat:'bottom',brand:'Zara',name:'Slim Trousers',size:'S',retailer:'zara.com',color:PAL[1],dims:{Waist:74,Hip:94,Inseam:76,Thigh:56,'Leg Opening':34}},
+  {id:'b022',cat:'bottom',brand:'Zara',name:'Slim Trousers',size:'M',retailer:'zara.com',color:PAL[2],dims:{Waist:80,Hip:100,Inseam:78,Thigh:59,'Leg Opening':35}},
+  {id:'b023',cat:'bottom',brand:'Zara',name:'Slim Trousers',size:'L',retailer:'zara.com',color:PAL[3],dims:{Waist:86,Hip:106,Inseam:80,Thigh:62,'Leg Opening':36}},
+  {id:'b031',cat:'bottom',brand:'ASOS',name:'Slim Jeans',size:'30×32',retailer:'asos.com',color:PAL[4],dims:{Waist:76,Hip:95,Inseam:81,Thigh:57,'Leg Opening':34}},
+  {id:'b032',cat:'bottom',brand:'ASOS',name:'Slim Jeans',size:'32×32',retailer:'asos.com',color:PAL[5],dims:{Waist:81,Hip:100,Inseam:81,Thigh:60,'Leg Opening':35}},
+  {id:'b041',cat:'bottom',brand:'GAP',name:'Slim Khakis',size:'30×30',retailer:'gap.com',color:PAL[6],dims:{Waist:77,Hip:97,Inseam:76,Thigh:58,'Leg Opening':35}},
+  {id:'b042',cat:'bottom',brand:'GAP',name:'Slim Khakis',size:'32×30',retailer:'gap.com',color:PAL[7],dims:{Waist:82,Hip:102,Inseam:76,Thigh:61,'Leg Opening':36}},
+  {id:'b051',cat:'bottom',brand:'Uniqlo',name:'Smart Ankle Pants',size:'28',retailer:'uniqlo.com',color:PAL[0],dims:{Waist:73,Hip:92,Inseam:72,Thigh:55,'Leg Opening':32}},
+  {id:'b052',cat:'bottom',brand:'Uniqlo',name:'Smart Ankle Pants',size:'30',retailer:'uniqlo.com',color:PAL[1],dims:{Waist:78,Hip:97,Inseam:74,Thigh:58,'Leg Opening':33}},
+  {id:'b053',cat:'bottom',brand:'Uniqlo',name:'Smart Ankle Pants',size:'32',retailer:'uniqlo.com',color:PAL[2],dims:{Waist:83,Hip:102,Inseam:76,Thigh:61,'Leg Opening':34}},
+  {id:'b061',cat:'bottom',brand:'Mango',name:'Slim Fit Trousers',size:'S',retailer:'mango.com',color:PAL[3],dims:{Waist:74,Hip:93,Inseam:77,Thigh:56,'Leg Opening':33}},
+  {id:'b062',cat:'bottom',brand:'Mango',name:'Slim Fit Trousers',size:'M',retailer:'mango.com',color:PAL[4],dims:{Waist:80,Hip:99,Inseam:79,Thigh:59,'Leg Opening':34}},
+  {id:'b071',cat:'bottom',brand:'Arket',name:'Slim Jeans',size:'28×32',retailer:'arket.com',color:PAL[5],dims:{Waist:73,Hip:92,Inseam:81,Thigh:55,'Leg Opening':33}},
+  {id:'b072',cat:'bottom',brand:'Arket',name:'Slim Jeans',size:'30×32',retailer:'arket.com',color:PAL[6],dims:{Waist:78,Hip:97,Inseam:81,Thigh:58,'Leg Opening':34}},
+
+  // ── SHOES ──
+  {id:'s001',cat:'shoe',brand:'Nike',name:'Air Max 270',size:'US 7',retailer:'nike.com',color:PAL[3],dims:{Length:25.5,Width:9.2,'Heel Height':3.2,'Toe Box':8.6}},
+  {id:'s002',cat:'shoe',brand:'Nike',name:'Air Max 270',size:'US 8',retailer:'nike.com',color:PAL[0],dims:{Length:26.5,Width:9.5,'Heel Height':3.2,'Toe Box':8.9}},
+  {id:'s003',cat:'shoe',brand:'Nike',name:'Air Max 270',size:'US 9',retailer:'nike.com',color:PAL[1],dims:{Length:27.5,Width:9.8,'Heel Height':3.2,'Toe Box':9.1}},
+  {id:'s004',cat:'shoe',brand:'Nike',name:'Air Max 270',size:'US 10',retailer:'nike.com',color:PAL[2],dims:{Length:28.5,Width:10.1,'Heel Height':3.2,'Toe Box':9.4}},
+  {id:'s005',cat:'shoe',brand:'Nike',name:'Air Max 270',size:'US 11',retailer:'nike.com',color:PAL[4],dims:{Length:29.5,Width:10.4,'Heel Height':3.2,'Toe Box':9.7}},
+  {id:'s006',cat:'shoe',brand:'Nike',name:'Air Force 1',size:'US 9',retailer:'nike.com',color:PAL[5],dims:{Length:27.5,Width:10.0,'Heel Height':2.8,'Toe Box':9.5}},
+  {id:'s007',cat:'shoe',brand:'Nike',name:'Air Force 1',size:'US 10',retailer:'nike.com',color:PAL[6],dims:{Length:28.5,Width:10.3,'Heel Height':2.8,'Toe Box':9.8}},
+  {id:'s011',cat:'shoe',brand:'Adidas',name:'Ultraboost 22',size:'UK 7',retailer:'adidas.com',color:PAL[7],dims:{Length:26.0,Width:9.2,'Heel Height':2.8,'Toe Box':8.7}},
+  {id:'s012',cat:'shoe',brand:'Adidas',name:'Ultraboost 22',size:'UK 8',retailer:'adidas.com',color:PAL[0],dims:{Length:27.0,Width:9.5,'Heel Height':2.8,'Toe Box':9.0}},
+  {id:'s013',cat:'shoe',brand:'Adidas',name:'Ultraboost 22',size:'UK 9',retailer:'adidas.com',color:PAL[1],dims:{Length:28.0,Width:9.8,'Heel Height':2.8,'Toe Box':9.3}},
+  {id:'s014',cat:'shoe',brand:'Adidas',name:'Ultraboost 22',size:'UK 10',retailer:'adidas.com',color:PAL[2],dims:{Length:29.0,Width:10.1,'Heel Height':2.8,'Toe Box':9.6}},
+  {id:'s015',cat:'shoe',brand:'Adidas',name:'Stan Smith',size:'UK 8',retailer:'adidas.com',color:PAL[3],dims:{Length:27.0,Width:9.6,'Heel Height':2.4,'Toe Box':9.2}},
+  {id:'s016',cat:'shoe',brand:'Adidas',name:'Stan Smith',size:'UK 9',retailer:'adidas.com',color:PAL[4],dims:{Length:28.0,Width:9.9,'Heel Height':2.4,'Toe Box':9.5}},
+  {id:'s021',cat:'shoe',brand:'New Balance',name:'574',size:'US 9',retailer:'newbalance.com',color:PAL[5],dims:{Length:27.5,Width:10.2,'Heel Height':2.6,'Toe Box':9.8}},
+  {id:'s022',cat:'shoe',brand:'New Balance',name:'574',size:'US 10',retailer:'newbalance.com',color:PAL[6],dims:{Length:28.5,Width:10.5,'Heel Height':2.6,'Toe Box':10.1}},
+  {id:'s023',cat:'shoe',brand:'New Balance',name:'990v5',size:'US 9',retailer:'newbalance.com',color:PAL[7],dims:{Length:27.5,Width:10.5,'Heel Height':3.0,'Toe Box':10.2}},
+  {id:'s031',cat:'shoe',brand:'Vans',name:'Old Skool',size:'US 9',retailer:'vans.com',color:PAL[0],dims:{Length:27.5,Width:9.6,'Heel Height':2.2,'Toe Box':9.3}},
+  {id:'s032',cat:'shoe',brand:'Vans',name:'Old Skool',size:'US 10',retailer:'vans.com',color:PAL[1],dims:{Length:28.5,Width:9.9,'Heel Height':2.2,'Toe Box':9.6}},
+  {id:'s041',cat:'shoe',brand:'Converse',name:'Chuck Taylor',size:'US 9',retailer:'converse.com',color:PAL[2],dims:{Length:27.5,Width:9.3,'Heel Height':2.0,'Toe Box':9.0}},
+  {id:'s042',cat:'shoe',brand:'Converse',name:'Chuck Taylor',size:'US 10',retailer:'converse.com',color:PAL[3],dims:{Length:28.5,Width:9.6,'Heel Height':2.0,'Toe Box':9.3}},
+  {id:'s051',cat:'shoe',brand:'Puma',name:'Suede Classic',size:'UK 8',retailer:'puma.com',color:PAL[4],dims:{Length:27.0,Width:9.7,'Heel Height':2.5,'Toe Box':9.4}},
+  {id:'s052',cat:'shoe',brand:'Puma',name:'Suede Classic',size:'UK 9',retailer:'puma.com',color:PAL[5],dims:{Length:28.0,Width:10.0,'Heel Height':2.5,'Toe Box':9.7}},
+
+  // ── JACKETS ──
+  {id:'j001',cat:'jacket',brand:'Zara',name:'Wool Blazer',size:'XS',retailer:'zara.com',color:PAL[3],dims:{Chest:92,Shoulder:41,Length:68,Sleeve:59,Hem:90,'Back Width':39}},
+  {id:'j002',cat:'jacket',brand:'Zara',name:'Wool Blazer',size:'S',retailer:'zara.com',color:PAL[0],dims:{Chest:98,Shoulder:43,Length:71,Sleeve:60,Hem:96,'Back Width':41}},
+  {id:'j003',cat:'jacket',brand:'Zara',name:'Wool Blazer',size:'M',retailer:'zara.com',color:PAL[1],dims:{Chest:104,Shoulder:45,Length:74,Sleeve:62,Hem:102,'Back Width':44}},
+  {id:'j004',cat:'jacket',brand:'Zara',name:'Wool Blazer',size:'L',retailer:'zara.com',color:PAL[2],dims:{Chest:110,Shoulder:47,Length:77,Sleeve:63,Hem:108,'Back Width':46}},
+  {id:'j005',cat:'jacket',brand:'Zara',name:'Puffer Jacket',size:'M',retailer:'zara.com',color:PAL[4],dims:{Chest:112,Shoulder:48,Length:68,Sleeve:63,Hem:110,'Back Width':46}},
+  {id:'j011',cat:'jacket',brand:'H&M',name:'Suit Jacket',size:'S',retailer:'hm.com',color:PAL[5],dims:{Chest:94,Shoulder:42,Length:70,Sleeve:59,Hem:92,'Back Width':40}},
+  {id:'j012',cat:'jacket',brand:'H&M',name:'Suit Jacket',size:'M',retailer:'hm.com',color:PAL[6],dims:{Chest:100,Shoulder:44,Length:73,Sleeve:61,Hem:98,'Back Width':43}},
+  {id:'j013',cat:'jacket',brand:'H&M',name:'Suit Jacket',size:'L',retailer:'hm.com',color:PAL[7],dims:{Chest:106,Shoulder:46,Length:76,Sleeve:62,Hem:104,'Back Width':45}},
+  {id:'j021',cat:'jacket',brand:'Uniqlo',name:'Padded Jacket',size:'S',retailer:'uniqlo.com',color:PAL[0],dims:{Chest:100,Shoulder:44,Length:66,Sleeve:60,Hem:98,'Back Width':42}},
+  {id:'j022',cat:'jacket',brand:'Uniqlo',name:'Padded Jacket',size:'M',retailer:'uniqlo.com',color:PAL[1],dims:{Chest:107,Shoulder:46,Length:69,Sleeve:62,Hem:105,'Back Width':44}},
+  {id:'j023',cat:'jacket',brand:'Uniqlo',name:'Padded Jacket',size:'L',retailer:'uniqlo.com',color:PAL[2],dims:{Chest:114,Shoulder:48,Length:72,Sleeve:63,Hem:112,'Back Width':46}},
+  {id:'j031',cat:'jacket',brand:'ASOS',name:'Slim Blazer',size:'S',retailer:'asos.com',color:PAL[3],dims:{Chest:96,Shoulder:43,Length:70,Sleeve:60,Hem:94,'Back Width':41}},
+  {id:'j032',cat:'jacket',brand:'ASOS',name:'Slim Blazer',size:'M',retailer:'asos.com',color:PAL[4],dims:{Chest:102,Shoulder:45,Length:73,Sleeve:61,Hem:100,'Back Width':43}},
+  {id:'j041',cat:'jacket',brand:'Mango',name:'Structured Blazer',size:'S',retailer:'mango.com',color:PAL[5],dims:{Chest:95,Shoulder:42,Length:69,Sleeve:59,Hem:93,'Back Width':40}},
+  {id:'j042',cat:'jacket',brand:'Mango',name:'Structured Blazer',size:'M',retailer:'mango.com',color:PAL[6],dims:{Chest:101,Shoulder:44,Length:72,Sleeve:61,Hem:99,'Back Width':43}},
+  {id:'j051',cat:'jacket',brand:'COS',name:'Relaxed Coat',size:'S',retailer:'cosstores.com',color:PAL[7],dims:{Chest:108,Shoulder:46,Length:98,Sleeve:63,Hem:112,'Back Width':45}},
+  {id:'j052',cat:'jacket',brand:'COS',name:'Relaxed Coat',size:'M',retailer:'cosstores.com',color:PAL[0],dims:{Chest:115,Shoulder:48,Length:101,Sleeve:64,Hem:119,'Back Width':47}},
+
+  // ── DRESSES ──
+  {id:'d001',cat:'dress',brand:'Zara',name:'Midi Dress',size:'XS',retailer:'zara.com',color:PAL[3],dims:{Chest:82,Waist:66,Hip:90,Length:110,Shoulder:36}},
+  {id:'d002',cat:'dress',brand:'Zara',name:'Midi Dress',size:'S',retailer:'zara.com',color:PAL[0],dims:{Chest:86,Waist:70,Hip:94,Length:112,Shoulder:37}},
+  {id:'d003',cat:'dress',brand:'Zara',name:'Midi Dress',size:'M',retailer:'zara.com',color:PAL[1],dims:{Chest:92,Waist:76,Hip:100,Length:114,Shoulder:39}},
+  {id:'d004',cat:'dress',brand:'Zara',name:'Midi Dress',size:'L',retailer:'zara.com',color:PAL[2],dims:{Chest:98,Waist:82,Hip:106,Length:116,Shoulder:41}},
+  {id:'d011',cat:'dress',brand:'ASOS',name:'Wrap Dress',size:'6',retailer:'asos.com',color:PAL[4],dims:{Chest:80,Waist:64,Hip:88,Length:104,Shoulder:35}},
+  {id:'d012',cat:'dress',brand:'ASOS',name:'Wrap Dress',size:'8',retailer:'asos.com',color:PAL[5],dims:{Chest:84,Waist:68,Hip:92,Length:106,Shoulder:36}},
+  {id:'d013',cat:'dress',brand:'ASOS',name:'Wrap Dress',size:'10',retailer:'asos.com',color:PAL[6],dims:{Chest:88,Waist:72,Hip:96,Length:108,Shoulder:37}},
+  {id:'d014',cat:'dress',brand:'ASOS',name:'Wrap Dress',size:'12',retailer:'asos.com',color:PAL[7],dims:{Chest:93,Waist:77,Hip:101,Length:110,Shoulder:38}},
+  {id:'d021',cat:'dress',brand:'H&M',name:'Jersey Dress',size:'XS',retailer:'hm.com',color:PAL[0],dims:{Chest:81,Waist:66,Hip:89,Length:96,Shoulder:35}},
+  {id:'d022',cat:'dress',brand:'H&M',name:'Jersey Dress',size:'S',retailer:'hm.com',color:PAL[1],dims:{Chest:85,Waist:70,Hip:93,Length:98,Shoulder:36}},
+  {id:'d023',cat:'dress',brand:'H&M',name:'Jersey Dress',size:'M',retailer:'hm.com',color:PAL[2],dims:{Chest:90,Waist:75,Hip:98,Length:100,Shoulder:38}},
+  {id:'d031',cat:'dress',brand:'Mango',name:'Linen Dress',size:'XS',retailer:'mango.com',color:PAL[3],dims:{Chest:83,Waist:67,Hip:91,Length:118,Shoulder:36}},
+  {id:'d032',cat:'dress',brand:'Mango',name:'Linen Dress',size:'S',retailer:'mango.com',color:PAL[4],dims:{Chest:87,Waist:71,Hip:95,Length:120,Shoulder:37}},
+  {id:'d033',cat:'dress',brand:'Mango',name:'Linen Dress',size:'M',retailer:'mango.com',color:PAL[5],dims:{Chest:93,Waist:77,Hip:101,Length:122,Shoulder:39}},
+  {id:'d041',cat:'dress',brand:'Arket',name:'Shift Dress',size:'34',retailer:'arket.com',color:PAL[6],dims:{Chest:84,Waist:72,Hip:92,Length:100,Shoulder:37}},
+  {id:'d042',cat:'dress',brand:'Arket',name:'Shift Dress',size:'36',retailer:'arket.com',color:PAL[7],dims:{Chest:88,Waist:76,Hip:96,Length:102,Shoulder:38}},
+  {id:'d043',cat:'dress',brand:'Arket',name:'Shift Dress',size:'38',retailer:'arket.com',color:PAL[0],dims:{Chest:93,Waist:81,Hip:101,Length:104,Shoulder:40}},
+  {id:'d051',cat:'dress',brand:'& Other Stories',name:'Satin Dress',size:'XS',retailer:'stories.com',color:PAL[1],dims:{Chest:82,Waist:66,Hip:88,Length:108,Shoulder:36}},
+  {id:'d052',cat:'dress',brand:'& Other Stories',name:'Satin Dress',size:'S',retailer:'stories.com',color:PAL[2],dims:{Chest:86,Waist:70,Hip:92,Length:110,Shoulder:37}},
+  {id:'d053',cat:'dress',brand:'& Other Stories',name:'Satin Dress',size:'M',retailer:'stories.com',color:PAL[3],dims:{Chest:91,Waist:75,Hip:97,Length:112,Shoulder:39}},
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let currentCat='top';
+let slots=[null,null,null];
+let dragId=null;
+let sbTab='all'; // 'all' or 'fav'
+let activeFilter='all';
+let searchQ='';
+let bpTab='visual';
+// favorites: set of ids
+let favorites=new Set(['t003','t022','b002','s003','j003']);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+window.onload=()=>{
+  renderFilters();
+  renderCards();
+  updateModalDims();
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CATEGORY
+// ─────────────────────────────────────────────────────────────────────────────
+function switchCat(cat,el){
+  currentCat=cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter='all';
+  searchQ='';
+  document.getElementById('sb-search-inp').value='';
+  slots=[null,null,null];
+  for(let i=0;i<3;i++)renderSlot(i);
+  renderBottom();
+  renderFilters();
+  renderCards();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIDEBAR TABS
+// ─────────────────────────────────────────────────────────────────────────────
+function switchSbTab(tab){
+  sbTab=tab;
+  document.getElementById('tab-all').classList.toggle('active',tab==='all');
+  document.getElementById('tab-fav').classList.toggle('active',tab==='fav');
+  document.getElementById('sb-title').textContent=tab==='fav'?'My Wardrobe':'Brand Library';
+  renderCards();
+}
+
+function toggleFavView(){
+  switchSbTab(sbTab==='fav'?'all':'fav');
+  const btn=document.getElementById('fav-toggle-btn');
+  btn.classList.toggle('on',sbTab==='fav');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTERS
+// ─────────────────────────────────────────────────────────────────────────────
+function renderFilters(){
+  const brands=[...new Set(CATALOG.filter(s=>s.cat===currentCat).map(s=>s.brand))];
+  const el=document.getElementById('sb-filters');
+  el.innerHTML=`<button class="sb-filter${activeFilter==='all'?' on':''}" onclick="setFilter('all',this)">All</button>`+
+    brands.map(b=>`<button class="sb-filter${activeFilter===b?' on':''}" onclick="setFilter('${b}',this)">${b}</button>`).join('');
+}
+
+function setFilter(val,el){
+  activeFilter=val;
+  document.querySelectorAll('.sb-filter').forEach(f=>f.classList.remove('on'));
+  el.classList.add('on');
+  renderCards();
+}
+
+function filterCards(q){searchQ=q.toLowerCase();renderCards();}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER CARD LIST
+// ─────────────────────────────────────────────────────────────────────────────
+function renderCards(){
+  const el=document.getElementById('card-list');
+  let items=CATALOG.filter(s=>s.cat===currentCat);
+  if(sbTab==='fav') items=items.filter(s=>favorites.has(s.id));
+  if(activeFilter!=='all') items=items.filter(s=>s.brand===activeFilter);
+  if(searchQ) items=items.filter(s=>`${s.brand} ${s.name} ${s.size}`.toLowerCase().includes(searchQ));
+  if(!items.length){el.innerHTML=`<div class="sb-empty">${sbTab==='fav'?'No wardrobe items yet.<br>Star items or add custom sizes.':'No items match your search.'}</div>`;return;}
+  el.innerHTML=items.map(s=>`
+    <div class="size-card${favorites.has(s.id)?' fav-card':''}" draggable="true" id="card-${s.id}"
+      style="--cc:${s.color}"
+      ondragstart="ds('${s.id}')" ondragend="de('${s.id}')"
+      onclick="autoSlot('${s.id}')">
+      <div class="sc-top">
+        <div class="sc-left">
+          <div class="sc-brand">${s.brand}</div>
+          <div class="sc-name">${s.name}</div>
+          <div class="sc-meta">${s.retailer}</div>
+        </div>
+        <div class="sc-right">
+          <div class="sc-size-badge">${s.size}</div>
+          <button class="fav-btn${favorites.has(s.id)?' on':''}" onclick="toggleFav(event,'${s.id}')" title="${favorites.has(s.id)?'Remove from wardrobe':'Add to wardrobe'}">${favorites.has(s.id)?'⭐':'☆'}</button>
+        </div>
+      </div>
+      <div class="sc-dims">
+        ${Object.entries(s.dims).slice(0,3).map(([k,v])=>`<div class="sc-chip">${k.split(' ')[0]}: ${v}</div>`).join('')}
+        ${Object.keys(s.dims).length>3?`<div class="sc-chip">+${Object.keys(s.dims).length-3}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleFav(e,id){
+  e.stopPropagation();
+  if(favorites.has(id))favorites.delete(id);
+  else favorites.add(id);
+  renderCards();
+  // re-render slots that show this item so their add-to-fav button updates
+  slots.forEach((sid,i)=>{if(sid===id)renderSlot(i);});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAG
+// ─────────────────────────────────────────────────────────────────────────────
+function ds(id){dragId=id;setTimeout(()=>document.getElementById('card-'+id)?.classList.add('dragging'),0);}
+function de(id){document.getElementById('card-'+id)?.classList.remove('dragging');}
+function ev(e,i){e.preventDefault();document.getElementById('slot-'+i).classList.add('drag-over');}
+function lv(i){document.getElementById('slot-'+i).classList.remove('drag-over');}
+function dp(e,i){e.preventDefault();document.getElementById('slot-'+i).classList.remove('drag-over');if(dragId){slots[i]=dragId;renderSlot(i);renderBottom();}dragId=null;}
+function autoSlot(id){
+  const empty=slots.indexOf(null);
+  const i=empty===-1?0:empty;
+  slots[i]=id;renderSlot(i);renderBottom();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER SLOT
+// ─────────────────────────────────────────────────────────────────────────────
+function renderSlot(idx){
+  const cnt=document.getElementById('slot-'+idx+'-cnt');
+  const ph=document.getElementById('ph-'+idx);
+  const sid=slots[idx];
+  if(!sid){cnt.innerHTML='';ph.style.display='flex';return;}
+  ph.style.display='none';
+  const s=CATALOG.find(x=>x.id===sid);
+  if(!s)return;
+  const mx=Math.max(...Object.values(s.dims));
+  const isFav=favorites.has(sid);
+
+  // Find sibling sizes: same brand + product name + category
+  const siblings=CATALOG.filter(x=>x.brand===s.brand&&x.name===s.name&&x.cat===s.cat);
+  const hasSiblings=siblings.length>1;
+
+  cnt.innerHTML=`
+    <div class="g-card" style="position:relative">
+      <button class="rm-btn" onclick="rmSlot(${idx})">✕</button>
+      <div class="g-card-hd">
+        <div style="min-width:0">
+          <div class="g-brand">${s.brand} · ${s.retailer}</div>
+          <div class="g-name">${s.name}</div>
+        </div>
+        <div class="g-badge" id="badge-${idx}">${s.size}</div>
+      </div>
+
+      ${hasSiblings?`
+      <div class="size-switcher">
+        <span class="size-sw-label">Switch size</span>
+        <div class="size-sw-pills">
+          ${siblings.map(sib=>`
+            <button class="size-sw-pill${sib.id===sid?' active':''}"
+              onclick="switchSize(${idx},'${sib.id}')"
+              title="${sib.size} — ${Object.entries(sib.dims).slice(0,2).map(([k,v])=>k+': '+v+'cm').join(', ')}">
+              ${sib.size}
+            </button>`).join('')}
+        </div>
+        <span class="size-sw-notif" id="sw-notif-${idx}" style="display:none">↻ Updated</span>
+      </div>`:''}
+
+      <div class="g-visual" id="gvisual-${idx}">${gsvg(s,'slot')}</div>
+      <div class="g-dims" id="gdims-${idx}">
+        <div class="g-dims-hd">
+          <label class="edit-lbl"><input type="checkbox" id="ed-${idx}" onchange="toggleEdit(${idx},this.checked)"> Edit dims</label>
+          <div class="g-dims-count">${Object.keys(s.dims).length} measurements</div>
+        </div>
+        ${Object.entries(s.dims).map(([k,v])=>{
+          const key=k.replace(/[\s\/]/g,'-');
+          return`<div class="dim-row">
+            <div class="dim-lbl">${k}</div>
+            <div class="dim-bar-wrap"><div class="dim-bar" id="bar-${idx}-${key}" style="width:${Math.round(v/mx*100)}%;background:${s.color};opacity:.78"></div></div>
+            <div class="dim-val" id="dv-${idx}-${key}">${v} cm</div>
+            <input class="dim-inp" id="di-${idx}-${key}" type="number" value="${v}" step="0.5" min="0" oninput="updDim('${sid}','${k}',this.value,${idx})">
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="add-fav-slot-btn" id="favbtn-${idx}" onclick="toggleFavSlot('${sid}')">${isFav?'⭐ In Wardrobe — click to remove':'☆ Add to My Wardrobe'}</button>
+    </div>`;
+}
+
+// Switch to a sibling size — re-renders just the dynamic parts without full slot rebuild
+function switchSize(idx, newId){
+  const prev=slots[idx];
+  slots[idx]=newId;
+  const s=CATALOG.find(x=>x.id===newId);
+  if(!s)return;
+  const mx=Math.max(...Object.values(s.dims));
+  const isFav=favorites.has(newId);
+
+  // Update badge
+  const badge=document.getElementById('badge-'+idx);
+  if(badge)badge.textContent=s.size;
+
+  // Animate size pill swap
+  document.querySelectorAll(`#slot-${idx}-cnt .size-sw-pill`).forEach(p=>{
+    p.classList.toggle('active',p.textContent.trim()===s.size);
+  });
+
+  // Flash notif
+  const notif=document.getElementById('sw-notif-'+idx);
+  if(notif){
+    notif.style.display='inline';
+    notif.textContent='↻ '+s.size+' loaded';
+    clearTimeout(notif._t);
+    notif._t=setTimeout(()=>{notif.style.display='none';},1800);
+  }
+
+  // Update SVG visual
+  const visual=document.getElementById('gvisual-'+idx);
+  if(visual){
+    visual.style.opacity='0.4';
+    visual.style.transition='opacity .18s';
+    setTimeout(()=>{
+      visual.innerHTML=gsvg(s,'slot');
+      visual.style.opacity='1';
+    },180);
+  }
+
+  // Update dim bars + values
+  const dimsEl=document.getElementById('gdims-'+idx);
+  if(dimsEl){
+    // Rebuild dims section entirely (clean)
+    dimsEl.innerHTML=`
+      <div class="g-dims-hd">
+        <label class="edit-lbl"><input type="checkbox" id="ed-${idx}" onchange="toggleEdit(${idx},this.checked)"> Edit dims</label>
+        <div class="g-dims-count">${Object.keys(s.dims).length} measurements</div>
+      </div>
+      ${Object.entries(s.dims).map(([k,v])=>{
+        const key=k.replace(/[\s\/]/g,'-');
+        return`<div class="dim-row">
+          <div class="dim-lbl">${k}</div>
+          <div class="dim-bar-wrap"><div class="dim-bar" id="bar-${idx}-${key}" style="width:0%;background:${s.color};opacity:.78"></div></div>
+          <div class="dim-val" id="dv-${idx}-${key}">${v} cm</div>
+          <input class="dim-inp" id="di-${idx}-${key}" type="number" value="${v}" step="0.5" min="0" oninput="updDim('${newId}','${k}',this.value,${idx})">
+        </div>`;
+      }).join('')}`;
+    // Animate bars in
+    requestAnimationFrame(()=>{
+      Object.entries(s.dims).forEach(([k,v])=>{
+        const key=k.replace(/[\s\/]/g,'-');
+        const bar=document.getElementById('bar-'+idx+'-'+key);
+        if(bar){bar.style.transition='width .45s cubic-bezier(.22,1,.36,1)';bar.style.width=Math.round(v/mx*100)+'%';}
+      });
+    });
+  }
+
+  // Update fav button
+  const favBtn=document.getElementById('favbtn-'+idx);
+  if(favBtn){
+    favBtn.textContent=isFav?'⭐ In Wardrobe — click to remove':'☆ Add to My Wardrobe';
+    favBtn.setAttribute('onclick',`toggleFavSlot('${newId}')`);
+  }
+
+  // Re-run full analysis
+  renderBottom();
+}
+
+function toggleFavSlot(id){
+  if(favorites.has(id))favorites.delete(id);
+  else favorites.add(id);
+  const idx=slots.indexOf(id);
+  if(idx>-1)renderSlot(idx);
+  renderCards();
+}
+
+function rmSlot(idx){slots[idx]=null;renderSlot(idx);renderBottom();}
+
+function toggleEdit(idx,on){
+  const sid=slots[idx];if(!sid)return;
+  const s=CATALOG.find(x=>x.id===sid);
+  Object.keys(s.dims).forEach(k=>{
+    const key=k.replace(/[\s\/]/g,'-');
+    const v=document.getElementById('dv-'+idx+'-'+key);
+    const inp=document.getElementById('di-'+idx+'-'+key);
+    if(v)v.style.display=on?'none':'block';
+    if(inp)inp.style.display=on?'block':'none';
+  });
+}
+
+function updDim(sid,k,val,idx){
+  const s=CATALOG.find(x=>x.id===sid);
+  if(!s||val===''||isNaN(+val))return;
+  s.dims[k]=parseFloat(val);
+  const mx=Math.max(...Object.values(s.dims));
+  Object.entries(s.dims).forEach(([dk,dv])=>{
+    const key=dk.replace(/[\s\/]/g,'-');
+    const b=document.getElementById('bar-'+idx+'-'+key);
+    if(b)b.style.width=Math.round(dv/mx*100)+'%';
+  });
+  const key=k.replace(/[\s\/]/g,'-');
+  const dv=document.getElementById('dv-'+idx+'-'+key);
+  if(dv)dv.textContent=val+' cm';
+  renderBottom();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCH SCORE ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+function calcMatchScore(a,b){
+  const dims=Object.keys(a.dims).filter(k=>b.dims[k]!==undefined);
+  if(!dims.length)return{score:0,breakdown:[],verdict:'No data',color:'#888'};
+  let total=0;const breakdown=[];
+  dims.forEach(k=>{
+    const av=a.dims[k];const bv=b.dims[k];
+    const diff=Math.abs(av-bv);
+    const pct=(diff/av)*100;
+    let score;
+    if(pct<=1)score=100;
+    else if(pct<=2.5)score=92;
+    else if(pct<=5)score=80;
+    else if(pct<=8)score=65;
+    else if(pct<=12)score=45;
+    else if(pct<=18)score=25;
+    else score=10;
+    // weight key dims more
+    const weight=(['Chest','Waist','Hip','Length'].includes(k))?1.4:1.0;
+    total+=score*weight;
+    breakdown.push({dim:k,diff:+(bv-av).toFixed(1),score,pct:+pct.toFixed(1)});
+  });
+  const weightedMax=dims.reduce((s,k)=>s+(['Chest','Waist','Hip','Length'].includes(k)?140:100),0);
+  const raw=Math.round((total/weightedMax)*100);
+  const score=Math.min(100,Math.max(0,raw));
+  let verdict,color;
+  if(score>=90){verdict='Excellent match';color='#6de8a0';}
+  else if(score>=75){verdict='Good match';color:color='#b8d96e';}
+  else if(score>=60){verdict='Close match';color='#e0c78a';}
+  else if(score>=45){verdict='Partial match';color='#f0a070';}
+  else{verdict='Poor match';color='#f08080';}
+  return{score,breakdown,verdict,color};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOTTOM PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderBottom(){
+  const items=slots.map(id=>id?CATALOG.find(x=>x.id===id):null).filter(Boolean);
+  if(bpTab==='visual')renderVisual(items);
+  else if(bpTab==='diff')renderDiffTable(items);
+  else if(bpTab==='chips')renderChips(items);
+  else if(bpTab==='match')renderMatch(items);
+  // render match score bar on each slot
+  renderSlotMatch(items);
+}
+
+function switchBpTab(tab,el){
+  bpTab=tab;
+  document.querySelectorAll('.bp-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['visual','diff','chips','match'].forEach(t=>{
+    document.getElementById('bp-'+t).style.display=t===tab?'block':'none';
+  });
+  const items=slots.map(id=>id?CATALOG.find(x=>x.id===id):null).filter(Boolean);
+  if(tab==='visual')renderVisual(items);
+  else if(tab==='diff')renderDiffTable(items);
+  else if(tab==='chips')renderChips(items);
+  else if(tab==='match')renderMatch(items);
+}
+
+function renderSlotMatch(items){
+  // show match score banner between slot 0 and others
+  if(items.length<2)return;
+  const base=items[0];
+  items.slice(1).forEach((comp,i)=>{
+    const slotIdx=slots.indexOf(comp.id);
+    const cnt=document.getElementById('slot-'+slotIdx+'-cnt');
+    if(!cnt)return;
+    const existing=cnt.querySelector('.match-bar-wrap');
+    if(existing)existing.remove();
+    const ms=calcMatchScore(base,comp);
+    const div=document.createElement('div');
+    div.className='match-bar-wrap';
+    div.innerHTML=`
+      <div class="mb-label">Match vs ${base.brand} ${base.size}</div>
+      <div class="mb-score-row">
+        <div class="mb-number" style="color:${ms.color}">${ms.score}%</div>
+        <div class="mb-bar-col">
+          <div class="mb-track"><div class="mb-fill" style="width:${ms.score}%;background:${ms.color}"></div></div>
+          <div class="mb-verdict" style="color:${ms.color}">${ms.verdict}</div>
+        </div>
+      </div>
+      <div class="mb-breakdown">
+        ${ms.breakdown.slice(0,6).map(b=>{
+          const cls=b.score>=85?'good':b.score>=60?'ok':'bad';
+          const sign=b.diff>0?'+':'';
+          return`<div class="mb-chip ${cls}">${b.dim}: ${sign}${b.diff}cm</div>`;
+        }).join('')}
+      </div>`;
+    cnt.appendChild(div);
+  });
+}
+
+function renderMatch(items){
+  const el=document.getElementById('match-inner');
+  if(items.length<2){el.innerHTML='<div class="no-data">Add two or more sizes to see match scores</div>';return;}
+  const base=items[0];
+  el.innerHTML=`
+    <div style="font-size:9px;color:var(--ink4);margin-bottom:12px">
+      Matching all against baseline: <strong style="color:${base.color}">${base.brand} ${base.name} ${base.size}</strong>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${items.slice(1).map(comp=>{
+        const ms=calcMatchScore(base,comp);
+        return`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:12px 14px;min-width:200px;flex:1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-size:8px;color:${comp.color};text-transform:uppercase;letter-spacing:1.5px;font-weight:700">${comp.brand}</div>
+              <div style="font-family:var(--srf);font-size:14px;color:var(--paper)">${comp.name} <strong>${comp.size}</strong></div>
+            </div>
+            <div style="font-family:var(--srf);font-size:32px;font-weight:700;color:${ms.color}">${ms.score}%</div>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div style="height:100%;width:${ms.score}%;background:${ms.color};border-radius:3px;transition:width .5s"></div>
+          </div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:${ms.color};margin-bottom:8px">${ms.verdict}</div>
+          <table style="width:100%;border-collapse:collapse">
+            ${ms.breakdown.map(b=>{
+              const cls=b.score>=85?'d-pos':b.score>=60?'':b.score<45?'d-neg':'';
+              const sign=b.diff>0?'+':'';
+              return`<tr>
+                <td style="font-size:9px;color:var(--ink4);padding:3px 0">${b.dim}</td>
+                <td style="font-size:9px;text-align:right;padding:3px 0" class="${cls}">${sign}${b.diff} cm</td>
+                <td style="font-size:9px;text-align:right;padding:3px 0;color:var(--ink3)">${b.score}/100</td>
+              </tr>`;
+            }).join('')}
+          </table>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderVisual(items){
+  const el=document.getElementById('ov-inner');
+  if(!items.length){el.innerHTML='<div class="no-data" style="margin:auto">Add sizes above to compare</div>';return;}
+  if(items.length===1){
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin:auto">
+      <div style="font-size:8px;color:${items[0].color};text-transform:uppercase;letter-spacing:1.5px;font-weight:700">${items[0].brand} · ${items[0].size}</div>
+      ${gsvg(items[0],'ov')}
+    </div>
+    <div class="ov-legend">${items.map(s=>`<div class="ov-leg-item"><div class="ov-dot" style="background:${s.color}"></div><span><strong style="color:${s.color}">${s.size}</strong> — ${s.brand} ${s.name}</span></div>`).join('')}</div>`;
+    return;
+  }
+  el.innerHTML=`
+    <div style="position:relative;display:flex;align-items:flex-end;justify-content:center;flex:1;min-height:150px">
+      ${items.map((s,i)=>`<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:0;z-index:${i};opacity:${.45+i*.18}">${gsvg(s,'ov')}</div>`).join('')}
+    </div>
+    <div class="ov-legend">${items.map(s=>`<div class="ov-leg-item"><div class="ov-dot" style="background:${s.color}"></div><span><strong style="color:${s.color}">${s.size}</strong> — ${s.brand} ${s.name}</span></div>`).join('')}
+      ${items.length>=2?`<div class="ov-leg-item" style="margin-left:auto"><span style="font-size:9px;color:var(--ink3);font-style:italic">Shapes scaled proportionally</span></div>`:''}
+    </div>`;
+}
+
+function renderDiffTable(items){
+  const el=document.getElementById('diff-inner');
+  if(items.length<2){el.innerHTML='<div class="no-data">Add two or more sizes to compare</div>';return;}
+  const base=items[0];const dims=Object.keys(base.dims);
+  el.innerHTML=`
+    <div style="font-size:9px;color:var(--ink4);margin-bottom:8px">
+      Baseline: <strong style="color:${base.color}">${base.brand} ${base.name} ${base.size}</strong>
+    </div>
+    <table class="dtbl">
+      <thead><tr>
+        <th style="text-align:left">Dimension</th>
+        <th style="color:${base.color}">${base.size}</th>
+        ${items.slice(1).flatMap(s=>[`<th style="color:${s.color}">${s.size}</th>`,`<th>Δ</th>`]).join('')}
+      </tr></thead>
+      <tbody>
+        ${dims.map(d=>{
+          const bv=base.dims[d];
+          return`<tr><td>${d}</td><td style="color:var(--seam2)">${bv}</td>
+            ${items.slice(1).map(s=>{
+              const v=s.dims[d];
+              if(v===undefined)return`<td>—</td><td>—</td>`;
+              const diff=+(v-bv).toFixed(1);
+              const cls=diff>0.3?'d-pos':diff<-0.3?'d-neg':'d-zero';
+              return`<td style="color:${s.color}">${v}</td><td class="${cls}">${diff>0?'+':''}${diff}</td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderChips(items){
+  const el=document.getElementById('chips-inner');
+  if(items.length<2){el.innerHTML='<div class="no-data">Add two sizes to compare</div>';return;}
+  const base=items[0];const comp=items[1];const dims=Object.keys(base.dims);
+  el.innerHTML=`
+    <div style="font-size:9px;color:var(--ink4);margin-bottom:10px;width:100%">
+      <strong style="color:${base.color}">${base.brand} ${base.size}</strong>
+      <span style="color:var(--ink3)"> vs </span>
+      <strong style="color:${comp.color}">${comp.brand} ${comp.size}</strong>
+    </div>
+    ${dims.map(d=>{
+      const bv=base.dims[d];const cv=comp.dims[d];
+      if(cv===undefined)return'';
+      const diff=+(cv-bv).toFixed(1);
+      if(Math.abs(diff)<0.05)return`<div class="d-chip zero"><div class="d-chip-lbl">${d}</div><div class="d-chip-val zero">${bv}</div><div class="d-chip-dir zero">= Same</div></div>`;
+      const cls=diff>0?'pos':'neg';
+      return`<div class="d-chip ${cls}"><div class="d-chip-lbl">${d}</div><div class="d-chip-val ${cls}">${diff>0?'+':''}${diff} cm</div><div class="d-chip-dir ${cls}">${diff>0?'▲ Larger':'▼ Smaller'}</div></div>`;
+    }).filter(Boolean).join('')}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GARMENT SVG
+// ─────────────────────────────────────────────────────────────────────────────
+function gsvg(s,mode){
+  if(s.cat==='top')return drawTop(s,mode);
+  if(s.cat==='bottom')return drawBottom(s,mode);
+  if(s.cat==='shoe')return drawShoe(s,mode);
+  if(s.cat==='jacket')return drawJacket(s,mode);
+  if(s.cat==='dress')return drawDress(s,mode);
+  return '';
+}
+
+function drawTop(s,mode){
+  const slot=mode==='slot';
+  const c=s.dims['Chest']||100;const sh=s.dims['Shoulder']||44;
+  const len=s.dims['Length']||70;const sl=s.dims['Sleeve']||22;
+  const col=s.color;
+  const sc=slot?1.15:0.85;
+  const W=c*sc*.42;const H=len*sc*.5;const S=sh*sc*.42;const SL=sl*sc*.45;
+  const vw=W+SL*2+20;const vh=H+42;const cx=vw/2;
+  const nw=S*.21;const nd=H*.13;
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'170px':'140px'}">
+    <defs><linearGradient id="tg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity="1"/><stop offset="100%" stop-color="${col}" stop-opacity=".72"/></linearGradient></defs>
+    <path d="M${cx-S/2} 18L${cx-S/2-SL} ${18+H*.32}L${cx-S/2-SL} ${18+H*.47}L${cx-S/2} ${18+H*.47}" fill="url(#tg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M${cx+S/2} 18L${cx+S/2+SL} ${18+H*.32}L${cx+S/2+SL} ${18+H*.47}L${cx+S/2} ${18+H*.47}" fill="url(#tg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M${cx-S/2} 18Q${cx-W/2} 28 ${cx-W/2} ${38+H*.04}L${cx-W/2} ${18+H}Q${cx} ${18+H+8} ${cx+W/2} ${18+H}L${cx+W/2} ${38+H*.04}Q${cx+W/2} 28 ${cx+S/2} 18Z" fill="url(#tg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1"/>
+    <path d="M${cx-nw} 18Q${cx} ${18+nd} ${cx+nw} 18" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/>
+    ${slot?`<line x1="${cx-W/2}" y1="${18+H*.37}" x2="${cx+W/2}" y2="${18+H*.37}" stroke="rgba(0,0,0,.12)" stroke-width=".7" stroke-dasharray="3,3"/>
+    <text x="${cx}" y="${18+H*.37-3}" text-anchor="middle" font-size="7.5" fill="rgba(0,0,0,.28)" font-family="Syne,sans-serif">${c}cm</text>`:''}
+  </svg>`;
+}
+
+function drawBottom(s,mode){
+  const slot=mode==='slot';const col=s.color;
+  const sc=slot?1.0:0.82;
+  const w=(s.dims['Waist']||80)*sc;const h=(s.dims['Hip']||96)*sc;
+  const ins=(s.dims['Inseam']||78)*sc;const th=(s.dims['Thigh']||58)*sc;
+  const W=w*.36;const H=h*.28;const IL=ins*.38;const TH=th*.25;
+  const vw=H+24;const vh=H*.5+IL+22;const cx=vw/2;
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'190px':'150px'}">
+    <defs><linearGradient id="bg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".96"/><stop offset="100%" stop-color="${col}" stop-opacity=".7"/></linearGradient></defs>
+    <rect x="${cx-W/2}" y="8" width="${W}" height="${H*.13}" rx="3" fill="${col}" opacity=".97"/>
+    <path d="M${cx-W/2} ${8+H*.13}Q${cx-H*.3} ${8+H*.5} ${cx-TH/2} ${8+H*.5}L${cx-TH/2+TH*.18} ${8+H*.5+IL}Q${cx} ${8+H*.5+IL+7} ${cx-TH*.14} ${8+H*.5+IL}L${cx-2} ${8+H*.5+4}" fill="url(#bg${s.id})" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+    <path d="M${cx+W/2} ${8+H*.13}Q${cx+H*.3} ${8+H*.5} ${cx+TH/2} ${8+H*.5}L${cx+TH/2-TH*.18} ${8+H*.5+IL}Q${cx} ${8+H*.5+IL+7} ${cx+TH*.14} ${8+H*.5+IL}L${cx+2} ${8+H*.5+4}" fill="url(#bg${s.id})" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+    <path d="M${cx-2} ${8+H*.5+4}Q${cx} ${8+H*.5+14} ${cx+2} ${8+H*.5+4}" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="1.2"/>
+    ${slot?`<line x1="${cx-W/2}" y1="${8+H*.13}" x2="${cx+W/2}" y2="${8+H*.13}" stroke="rgba(0,0,0,.14)" stroke-width=".7" stroke-dasharray="3,2"/>
+    <text x="${cx}" y="${8+H*.13-2}" text-anchor="middle" font-size="7" fill="rgba(0,0,0,.28)" font-family="Syne,sans-serif">${s.dims['Waist']}cm</text>`:''}
+  </svg>`;
+}
+
+function drawShoe(s,mode){
+  const slot=mode==='slot';const col=s.color;
+  const sc=slot?5.0:4.4;
+  const len=(s.dims['Length']||27)*sc*.28;
+  const wid=(s.dims['Width']||9.8)*sc*.28;
+  const heel=(s.dims['Heel Height']||3)*sc*.28;
+  const vw=len+22;const vh=wid+heel+32;
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'130px':'110px'}">
+    <defs><linearGradient id="sg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".92"/><stop offset="100%" stop-color="${col}" stop-opacity=".6"/></linearGradient></defs>
+    <path d="M10 ${20+wid}Q10 ${20+wid+heel} ${20+len*.15} ${20+wid+heel}L${10+len*.85} ${20+wid+heel}Q${10+len} ${20+wid+heel} ${10+len} ${20+wid}L${10+len} ${20+wid*.6}Q${10+len} ${20} ${10+len*.7} ${20}L${10+len*.1} ${20}Q10 ${20} 10 ${20+wid*.5}Z" fill="${col}" opacity=".28" stroke="${col}" stroke-width="1.2"/>
+    <path d="M${10+len*.1} ${20}Q${10+len*.15} ${10} ${10+len*.35} ${10}L${10+len*.65} ${10}Q${10+len*.9} ${10} ${10+len} ${20}L${10+len} ${20+wid*.58}Q${10+len*.84} ${18} ${10+len*.6} ${16}L${10+len*.35} ${16}Q${10+len*.15} ${18} ${10+len*.1} ${20}Z" fill="url(#sg${s.id})" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+    <path d="M${10+len*.35} ${16}Q${10+len*.5} ${12} ${10+len*.6} ${16}" fill="rgba(255,255,255,.2)" stroke="rgba(0,0,0,.1)" stroke-width=".8"/>
+    ${slot?`<line x1="10" y1="${20+wid+heel+7}" x2="${10+len}" y2="${20+wid+heel+7}" stroke="rgba(0,0,0,.18)" stroke-width=".8" stroke-dasharray="3,2"/>
+    <text x="${10+len/2}" y="${20+wid+heel+17}" text-anchor="middle" font-size="7.5" fill="rgba(0,0,0,.28)" font-family="Syne,sans-serif">${s.dims['Length']} cm</text>`:''}
+  </svg>`;
+}
+
+function drawJacket(s,mode){
+  const slot=mode==='slot';const col=s.color;
+  const sc=slot?1.0:0.82;
+  const c=(s.dims['Chest']||104)*sc;const sh=(s.dims['Shoulder']||46)*sc;
+  const len=(s.dims['Length']||75)*sc;const sl=(s.dims['Sleeve']||62)*sc;
+  const W=c*.4;const H=len*.5;const S=sh*.4;const SL=sl*.38*.48;
+  const vw=W+SL*2+22;const vh=H+50;const cx=vw/2;const lap=W*.17;
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'185px':'155px'}">
+    <defs><linearGradient id="jg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity="1"/><stop offset="100%" stop-color="${col}" stop-opacity=".74"/></linearGradient></defs>
+    <path d="M${cx-S/2} 22L${cx-S/2-SL} ${22+H*.55}L${cx-S/2-SL} ${22+H*.7}L${cx-S/2} ${22+H*.6}" fill="url(#jg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M${cx+S/2} 22L${cx+S/2+SL} ${22+H*.55}L${cx+S/2+SL} ${22+H*.7}L${cx+S/2} ${22+H*.6}" fill="url(#jg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M${cx-S/2} 22Q${cx-W/2} 34 ${cx-W/2} ${42+H*.04}L${cx-W/2} ${22+H}L${cx+W/2} ${22+H}L${cx+W/2} ${42+H*.04}Q${cx+W/2} 34 ${cx+S/2} 22Z" fill="url(#jg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1"/>
+    <path d="M${cx-lap} 22L${cx-3} ${22+H*.22}L${cx-W/2+lap} ${22+H*.31}L${cx-W/2+lap} 22Z" fill="rgba(255,255,255,.12)" stroke="rgba(0,0,0,.1)" stroke-width=".8"/>
+    <path d="M${cx+lap} 22L${cx+3} ${22+H*.22}L${cx+W/2-lap} ${22+H*.31}L${cx+W/2-lap} 22Z" fill="rgba(255,255,255,.12)" stroke="rgba(0,0,0,.1)" stroke-width=".8"/>
+    <line x1="${cx}" y1="${22+H*.22}" x2="${cx}" y2="${22+H}" stroke="rgba(0,0,0,.11)" stroke-width="1" stroke-dasharray="2,5"/>
+  </svg>`;
+}
+
+function drawDress(s,mode){
+  const slot=mode==='slot';const col=s.color;
+  const sc=slot?1.0:0.82;
+  const c=(s.dims['Chest']||88)*sc;const w=(s.dims['Waist']||70)*sc;
+  const h=(s.dims['Hip']||94)*sc;const len=(s.dims['Length']||110)*sc;
+  const sh=(s.dims['Shoulder']||37)*sc;
+  const W=c*.38;const BW=h*.38;const H=len*.38;const S=sh*.38;const WW=w*.38;
+  const vw=W+30;const vh=H+30;const cx=vw/2;
+  const waistY=H*.35;const hipY=H*.52;
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'200px':'160px'}">
+    <defs><linearGradient id="dg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".95"/><stop offset="100%" stop-color="${col}" stop-opacity=".7"/></linearGradient></defs>
+    <path d="M${cx-S/2} 14Q${cx-W/2} 22 ${cx-W/2} 32L${cx-WW/2} ${14+waistY}L${cx-BW/2} ${14+hipY}L${cx-BW/2+BW*.08} ${14+H}L${cx+BW/2-BW*.08} ${14+H}L${cx+BW/2} ${14+hipY}L${cx+WW/2} ${14+waistY}L${cx+W/2} 32Q${cx+W/2} 22 ${cx+S/2} 14Z" fill="url(#dg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1"/>
+    <path d="M${cx-S*.22} 14Q${cx} ${14+H*.1} ${cx+S*.22} 14" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="1.4"/>
+    <line x1="${cx-WW/2}" y1="${14+waistY}" x2="${cx+WW/2}" y2="${14+waistY}" stroke="rgba(0,0,0,.13)" stroke-width=".7" stroke-dasharray="3,2"/>
+    ${slot?`<text x="${cx}" y="${14+waistY-2}" text-anchor="middle" font-size="7" fill="rgba(0,0,0,.25)" font-family="Syne,sans-serif">${s.dims['Waist']}cm</text>`:''}
+  </svg>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openModal(){updateModalDims();document.getElementById('add-modal').classList.add('open');}
+function closeModal(){document.getElementById('add-modal').classList.remove('open');}
+function updateModalDims(){
+  const cat=document.getElementById('f-cat')?.value||'top';
+  document.getElementById('modal-dims').innerHTML=DIM_DEFS[cat].map(d=>`
+    <div class="inp-grp">
+      <label class="inp-lbl">${d} (cm)</label>
+      <input class="inp" id="md-${d.replace(/[\s\/]/g,'-')}" type="number" placeholder="0.0" step="0.5" min="0">
+    </div>`).join('');
+}
+function addCustomSize(){
+  const brand=(document.getElementById('f-brand').value||'Custom').trim();
+  const name=(document.getElementById('f-name').value||'Item').trim();
+  const size=(document.getElementById('f-size').value||'Custom').trim();
+  const cat=document.getElementById('f-cat').value;
+  const fav=document.getElementById('f-fav').checked;
+  const dims={};
+  DIM_DEFS[cat].forEach(d=>{
+    const v=parseFloat(document.getElementById('md-'+d.replace(/[\s\/]/g,'-'))?.value);
+    dims[d]=isNaN(v)?0:v;
+  });
+  const col=PAL[CATALOG.filter(s=>s.cat===cat).length%PAL.length];
+  const id='c'+Date.now();
+  CATALOG.push({id,cat,brand,name,size,retailer:'custom',color:col,dims});
+  if(fav)favorites.add(id);
+  if(currentCat===cat)renderCards();
+  closeModal();
+  ['f-brand','f-name','f-size'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('f-fav').checked=false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI LOOKUP
+// ─────────────────────────────────────────────────────────────────────────────
+function openAiModal(prefill=''){
+  document.getElementById('ai-modal').classList.add('open');
+  switchAiMode('search');
+  const inp=document.getElementById('ai-modal-inp');
+  inp.value=prefill||'';
+  document.getElementById('ai-results').innerHTML='';
+  document.getElementById('ai-status').innerHTML='';
+  setTimeout(()=>inp.focus(),120);
+  if(prefill) runAiLookup();
+}
+function closeAiModal(){
+  document.getElementById('ai-modal').classList.remove('open');
+}
+
+async function runAiLookup(){
+  const query=document.getElementById('ai-modal-inp').value.trim();
+  if(!query) return;
+  const btn=document.getElementById('ai-search-btn');
+  const statusEl=document.getElementById('ai-status');
+  const resultsEl=document.getElementById('ai-results');
+  btn.disabled=true;
+  statusEl.innerHTML=`<div class="ai-spinner"></div> Searching the web for <em>${query}</em>…`;
+  resultsEl.innerHTML='';
+
+  const systemPrompt=`You are a clothing measurements expert. The user will give you a clothing model name or search query.
+Search the web to find the official size measurements for that specific clothing item.
+Return ONLY a valid JSON array (no markdown, no explanation) with this exact structure:
+[
+  {
+    "brand": "Brand Name",
+    "name": "Product Name",
+    "size": "Size Label (e.g. M, L, 32x32, US 10)",
+    "cat": "top|bottom|shoe|jacket|dress",
+    "retailer": "retailer domain or name",
+    "source": "URL or site where measurements were found",
+    "dims": {
+      // For top: Chest, Shoulder, Length, Sleeve, Hem (all in cm)
+      // For bottom: Waist, Hip, Inseam, Thigh, Leg Opening (all in cm)
+      // For shoe: Length, Width, Heel Height, Toe Box (all in cm)
+      // For jacket: Chest, Shoulder, Length, Sleeve, Hem, Back Width (all in cm)
+      // For dress: Chest, Waist, Hip, Length, Shoulder (all in cm)
+    }
+  }
+]
+Include all available sizes for the item (e.g. XS through 2XL, or all waist sizes). Convert inches to cm if needed (1 inch = 2.54 cm). If you cannot find measurements for a specific dimension, estimate based on standard sizing. Return between 1 and 8 results. Return only the JSON array.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Find size measurements for: ${query}` }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `API error ${response.status}`);
+    }
+
+    const data = await response.json();
+    // Collect all text blocks (web search may produce multiple)
+    const text = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+
+    // Extract JSON array from response
+    const match = text.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No measurements found. Try a more specific query.');
+    const clean = match[0].replace(/```json|```/g, '').trim();
+    const items = JSON.parse(clean);
+
+    if (!items.length) {
+      statusEl.innerHTML='';
+      resultsEl.innerHTML=`<div class="ai-empty">No results found for "<strong>${query}</strong>". Try adding a brand name or size.</div>`;
+      btn.disabled=false;
+      return;
+    }
+
+    statusEl.innerHTML=`✦ Found ${items.length} size${items.length>1?'s':''} for <strong>${query}</strong>`;
+    resultsEl.innerHTML = items.map((item,i) => renderAiCard(item,i)).join('');
+
+  } catch(err) {
+    statusEl.innerHTML='';
+    resultsEl.innerHTML=`<div class="ai-error">⚠ ${err.message}</div>`;
+  }
+  btn.disabled=false;
+}
+
+function renderAiCard(item, idx){
+  const dims = item.dims || {};
+  const dimKeys = Object.keys(dims).filter(k => dims[k] && dims[k] > 0);
+  return `
+  <div class="ai-result-card" id="ai-card-${idx}">
+    <div class="ai-rc-hd">
+      <div class="ai-rc-left">
+        <div class="ai-rc-brand">${item.brand||'Unknown'}</div>
+        <div class="ai-rc-name">${item.name||'—'}</div>
+        <div class="ai-rc-meta">${item.retailer||''}</div>
+      </div>
+      <div class="ai-rc-right">
+        <div class="ai-rc-size">${item.size||'—'}</div>
+        <button class="ai-rc-fav" id="ai-fav-${idx}" title="Add to Wardrobe" onclick="toggleAiFav(${idx})">⭐</button>
+        <button class="ai-rc-add" id="ai-add-${idx}" onclick="addAiResult(${idx}, false)">+ Add</button>
+      </div>
+    </div>
+    <div class="ai-rc-dims">
+      ${dimKeys.map(k=>`
+        <div class="ai-rc-dim">
+          <div class="ai-rc-dim-lbl">${k}</div>
+          <div class="ai-rc-dim-val">${dims[k]} cm</div>
+        </div>`).join('')}
+    </div>
+    ${item.source?`<div class="ai-rc-source">Source: ${item.source}</div>`:''}
+  </div>`;
+}
+
+// Store last results so addAiResult can access them
+let _aiLastResults=[];
+const _origRunAi=runAiLookup;
+// Patch to capture results
+async function runAiLookup(){
+  _aiLastResults=[];
+  await _origRunAi();
+}
+
+// Re-define to capture parsed items
+(function(){
+  const _orig=runAiLookup;
+  window.runAiLookup=async function(){
+    const query=document.getElementById('ai-modal-inp').value.trim();
+    if(!query) return;
+    const btn=document.getElementById('ai-search-btn');
+    const statusEl=document.getElementById('ai-status');
+    const resultsEl=document.getElementById('ai-results');
+    btn.disabled=true;
+    statusEl.innerHTML=`<div class="ai-spinner"></div> Searching the web for <em>${query}</em>…`;
+    resultsEl.innerHTML='';
+    _aiLastResults=[];
+    _aiFavSet.clear();
+
+    const systemPrompt=`You are a clothing measurements expert. The user will give you a clothing model name or search query.
+Search the web to find the official size measurements for that specific clothing item.
+Return ONLY a valid JSON array (no markdown, no explanation) with this exact structure:
+[
+  {
+    "brand": "Brand Name",
+    "name": "Product Name",
+    "size": "Size Label (e.g. M, L, 32x32, US 10)",
+    "cat": "top|bottom|shoe|jacket|dress",
+    "retailer": "retailer domain or name",
+    "source": "URL or site where measurements were found",
+    "dims": {
+      "Chest": 100,
+      "Shoulder": 44
+    }
+  }
+]
+Include all available sizes. Convert inches to cm (×2.54). Use only the dimension keys relevant to the category. Return 1-8 results. Return ONLY the JSON array.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{ role: 'user', content: `Find size measurements for: ${query}` }]
+        })
+      });
+
+      if(!response.ok){
+        const err=await response.json();
+        throw new Error(err.error?.message||`API error ${response.status}`);
+      }
+
+      const data=await response.json();
+      const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+      const match=text.match(/\[[\s\S]*\]/);
+      if(!match) throw new Error('No measurements found. Try a more specific query (e.g. "Nike Dri-FIT Tee M").');
+      const items=JSON.parse(match[0]);
+      _aiLastResults=items;
+
+      if(!items.length){
+        statusEl.innerHTML='';
+        resultsEl.innerHTML=`<div class="ai-empty">No results for "<strong>${query}</strong>". Try adding brand + size (e.g. "Zara Linen Shirt M").</div>`;
+        btn.disabled=false;
+        return;
+      }
+      statusEl.innerHTML=`✦ Found ${items.length} size${items.length>1?'s':''} for <strong>${query}</strong>`;
+      resultsEl.innerHTML=items.map((item,i)=>renderAiCard(item,i)).join('');
+
+    } catch(err){
+      statusEl.innerHTML='';
+      resultsEl.innerHTML=`<div class="ai-error">⚠ ${err.message}</div>`;
+    }
+    btn.disabled=false;
+  };
+})();
+
+// Track which ai results are marked as fav before adding
+const _aiFavSet = new Set();
+
+function toggleAiFav(idx){
+  const btn = document.getElementById(`ai-fav-${idx}`);
+  if(_aiFavSet.has(idx)){
+    _aiFavSet.delete(idx);
+    btn.classList.remove('on');
+    btn.title='Add to Wardrobe';
+  } else {
+    _aiFavSet.add(idx);
+    btn.classList.add('on');
+    btn.title='In Wardrobe ⭐';
+  }
+}
+
+function addAiResult(idx, asFav){
+  const item=_aiLastResults[idx];
+  if(!item) return;
+  const cat=item.cat||'top';
+  const validDims=DIM_DEFS[cat]||DIM_DEFS['top'];
+  const dims={};
+  validDims.forEach(d=>{ dims[d]=parseFloat(item.dims?.[d])||0; });
+  const col=PAL[CATALOG.length%PAL.length];
+  const id='ai'+Date.now()+idx;
+  CATALOG.push({
+    id,cat,
+    brand:item.brand||'Unknown',
+    name:item.name||'Item',
+    size:item.size||'—',
+    retailer:item.retailer||'web',
+    color:col,
+    dims
+  });
+  // Add to wardrobe if star was toggled or asFav passed
+  if(_aiFavSet.has(idx) || asFav) favorites.add(id);
+  if(currentCat===cat) renderCards();
+  // Visual feedback on add button
+  const addBtn=document.getElementById(`ai-add-${idx}`);
+  if(addBtn){
+    addBtn.textContent= (_aiFavSet.has(idx)||asFav) ? '✓ Added to Wardrobe' : '✓ Added';
+    addBtn.style.background='var(--emerald)';
+    addBtn.style.color='#fff';
+    addBtn.disabled=true;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI MODE SWITCH
+// ─────────────────────────────────────────────────────────────────────────────
+function switchAiMode(mode){
+  const isSearch = mode==='search';
+  document.getElementById('ai-tab-search').classList.toggle('active', isSearch);
+  document.getElementById('ai-tab-url').classList.toggle('active', !isSearch);
+  document.getElementById('ai-pane-search').style.display = isSearch ? '' : 'none';
+  document.getElementById('ai-pane-url').style.display = isSearch ? 'none' : '';
+  document.getElementById('ai-status').innerHTML='';
+  document.getElementById('ai-results').innerHTML='';
+  _aiLastResults=[];
+  _aiFavSet.clear();
+  setTimeout(()=>{
+    const inp = isSearch ? document.getElementById('ai-modal-inp') : document.getElementById('ai-url-inp');
+    inp && inp.focus();
+  }, 80);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// URL SCRAPE LOOKUP
+// ─────────────────────────────────────────────────────────────────────────────
+async function runUrlLookup(){
+  const url = document.getElementById('ai-url-inp').value.trim();
+  if(!url) return;
+  if(!/^https?:\/\//i.test(url)){
+    document.getElementById('ai-results').innerHTML=`<div class="ai-error">⚠ Please enter a full URL starting with https://</div>`;
+    return;
+  }
+
+  const btn = document.getElementById('ai-url-btn');
+  const statusEl = document.getElementById('ai-status');
+  const resultsEl = document.getElementById('ai-results');
+  btn.disabled=true;
+  statusEl.innerHTML=`<div class="ai-spinner"></div> Scraping product page…`;
+  resultsEl.innerHTML='';
+  _aiLastResults=[];
+  _aiFavSet.clear();
+
+  const systemPrompt=`You are a clothing measurements expert with web browsing ability.
+The user will give you a URL to a clothing product page.
+Fetch the page and extract all size measurements available on it.
+Return ONLY a valid JSON array (no markdown, no explanation, no preamble) with this structure:
+[
+  {
+    "brand": "Brand Name",
+    "name": "Product Name",
+    "size": "Size Label (e.g. XS, M, L, 32x32, EU 42)",
+    "cat": "top|bottom|shoe|jacket|dress",
+    "retailer": "retailer name or domain",
+    "source": "the original URL",
+    "dims": {
+      "Chest": 100,
+      "Shoulder": 44,
+      "Length": 72,
+      "Sleeve": 63,
+      "Hem": 98
+    }
+  }
+]
+Rules:
+- Include one entry per available size (e.g. XS, S, M, L, XL).
+- Convert all measurements to cm (1 inch = 2.54 cm, 1 mm = 0.1 cm).
+- Use only the dimension keys appropriate for the category:
+  top: Chest, Shoulder, Length, Sleeve, Hem
+  bottom: Waist, Hip, Inseam, Thigh, Leg Opening
+  shoe: Length, Width, Heel Height, Toe Box
+  jacket: Chest, Shoulder, Length, Sleeve, Hem, Back Width
+  dress: Chest, Waist, Hip, Length, Shoulder
+- If a dimension is not on the page, omit it (do not guess).
+- Return 1–10 results maximum.
+- Return ONLY the raw JSON array.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: systemPrompt,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Please fetch this product page and extract all size measurements from it: ${url}` }]
+      })
+    });
+
+    if(!response.ok){
+      const err=await response.json();
+      throw new Error(err.error?.message||`API error ${response.status}`);
+    }
+
+    const data=await response.json();
+    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const matchArr=text.match(/\[[\s\S]*\]/);
+    if(!matchArr) throw new Error('Could not extract measurements from this page. Try a different product URL or use the search tab.');
+    const items=JSON.parse(matchArr[0]);
+    _aiLastResults=items;
+
+    if(!items.length){
+      statusEl.innerHTML='';
+      resultsEl.innerHTML=`<div class="ai-empty">No size measurements found on this page. The site may block scraping — try the Search tab instead.</div>`;
+      btn.disabled=false;
+      return;
+    }
+
+    const domain = (() => { try { return new URL(url).hostname.replace('www.',''); } catch(e){ return url; } })();
+    statusEl.innerHTML=`✦ Scraped ${items.length} size${items.length>1?'s':''} from <strong>${domain}</strong>`;
+    resultsEl.innerHTML=items.map((item,i)=>renderAiCard(item,i)).join('');
+
+  } catch(err){
+    statusEl.innerHTML='';
+    resultsEl.innerHTML=`<div class="ai-error">⚠ ${err.message}</div>`;
+  }
+  btn.disabled=false;
+}
+</script>
+</body>
+</html>
