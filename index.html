@@ -67,16 +67,12 @@ header{background:var(--surface);height:68px;display:flex;align-items:center;pad
 /* ── SIDEBAR ── now light, like a boutique */
 .sidebar{background:var(--bg2);display:flex;flex-direction:column;border-right:1px solid var(--line);overflow:hidden;}
 
-/* AI Lookup section — refined, less shouty */
-.sb-ai-section{padding:20px 22px 18px;background:var(--surface);border-bottom:1px solid var(--line);flex-shrink:0;}
-.sb-ai-label{font-family:var(--srf);font-size:18px;font-weight:500;color:var(--ink);margin-bottom:4px;letter-spacing:.2px;}
-.sb-ai-hint{font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.4;}
-.sb-ai-row{display:flex;gap:8px;}
-.sb-ai-inp{flex:1;background:var(--bg);border:1px solid var(--line2);border-radius:var(--rsm);padding:11px 14px;font-family:var(--ssf);font-size:14px;color:var(--ink);outline:none;min-width:0;transition:all .15s;}
-.sb-ai-inp::placeholder{color:var(--ink4);}
-.sb-ai-inp:focus{border-color:var(--accent);background:var(--surface);}
-.sb-ai-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--rsm);padding:11px 18px;font-family:var(--ssf);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
-.sb-ai-btn:hover{background:var(--accent2);}
+/* AI Lookup CTA — single bold button */
+.sb-ai-section{padding:22px 22px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-shrink:0;}
+.sb-ai-cta{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--ink);color:var(--bg);border:none;border-radius:var(--r);padding:18px 22px;cursor:pointer;transition:all .2s;text-align:left;font-family:var(--ssf);}
+.sb-ai-cta:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(42,37,32,.18);}
+.sb-ai-cta-label{font-family:var(--srf);font-size:21px;font-weight:500;letter-spacing:.2px;line-height:1.2;}
+.sb-ai-cta-sub{font-size:12px;color:var(--accent2);font-weight:400;letter-spacing:.2px;}
 
 .sb-head{padding:18px 22px 12px;flex-shrink:0;}
 .sb-title{font-family:var(--srf);font-size:14px;color:var(--ink3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;font-weight:500;}
@@ -367,7 +363,7 @@ header{background:var(--surface);height:68px;display:flex;align-items:center;pad
     <button class="cat-pill" onclick="switchCat('dress',this)">Dresses</button>
   </div>
   <div class="hd-btns">
-    <button class="hbtn hbtn-ghost" id="fav-toggle-btn" onclick="toggleFavView()">★ My Wardrobe</button>
+    <button class="hbtn hbtn-ghost on" id="fav-toggle-btn" onclick="toggleFavView()">★ My Wardrobe</button>
     <button class="hbtn hbtn-primary" onclick="openModal()">+ Add Custom</button>
   </div>
 </header>
@@ -376,17 +372,15 @@ header{background:var(--surface);height:68px;display:flex;align-items:center;pad
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-    <!-- AI LOOKUP — top of sidebar -->
+    <!-- AI LOOKUP — single CTA -->
     <div class="sb-ai-section">
-      <div class="sb-ai-label">Find your size with AI</div>
-      <div class="sb-ai-hint">Search a brand or paste a product link.</div>
-      <div class="sb-ai-row">
-        <input class="sb-ai-inp" id="ai-quick-inp" type="text" placeholder="e.g. Levi's 511, Zara M…" onkeydown="if(event.key==='Enter')openAiModal(this.value)">
-        <button class="sb-ai-btn" onclick="openAiModal(document.getElementById('ai-quick-inp').value)">Search</button>
-      </div>
+      <button class="sb-ai-cta" onclick="openAiModal()">
+        <span class="sb-ai-cta-label">Find your size with AI →</span>
+        <span class="sb-ai-cta-sub">Search any brand or paste a product link</span>
+      </button>
     </div>
     <div class="sb-head">
-      <div class="sb-title" id="sb-title">Brand Library</div>
+      <div class="sb-title" id="sb-title">My Wardrobe</div>
       <div class="sb-search">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.4"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         <input type="text" placeholder="Search brand or product…" id="sb-search-inp" oninput="filterCards(this.value)">
@@ -394,8 +388,8 @@ header{background:var(--surface);height:68px;display:flex;align-items:center;pad
     </div>
     <div class="sb-filters" id="sb-filters"></div>
     <div class="sb-tabs">
-      <div class="sb-tab active" id="tab-all" onclick="switchSbTab('all')">All</div>
-      <div class="sb-tab" id="tab-fav" onclick="switchSbTab('fav')">★ Wardrobe</div>
+      <div class="sb-tab active" id="tab-fav" onclick="switchSbTab('fav')">★ Wardrobe</div>
+      <div class="sb-tab" id="tab-all" onclick="switchSbTab('all')">All Items</div>
     </div>
     <div class="card-list" id="card-list"></div>
     <button class="sb-add-btn" onclick="openModal()">+ Add Custom Size</button>
@@ -685,7 +679,7 @@ const CATALOG=[
 let currentCat='top';
 let slots=[null,null,null];
 let dragId=null;
-let sbTab='all';
+let sbTab='fav';
 let activeFilter='all';
 let searchQ='';
 let bpTab='visual';
@@ -736,7 +730,18 @@ function renderCards(){
   if(sbTab==='fav') items=items.filter(s=>favorites.has(s.id));
   if(activeFilter!=='all') items=items.filter(s=>s.brand===activeFilter);
   if(searchQ) items=items.filter(s=>`${s.brand} ${s.name} ${s.size}`.toLowerCase().includes(searchQ));
-  if(!items.length){el.innerHTML=`<div class="sb-empty">${sbTab==='fav'?'No wardrobe items yet.<br>Star items or add custom sizes.':'No items match your search.'}</div>`;return;}
+  if(!items.length){
+    if(sbTab==='fav'){
+      el.innerHTML=`<div class="sb-empty">
+        <div style="font-family:var(--srf);font-size:18px;color:var(--ink2);margin-bottom:8px;font-style:normal">Your wardrobe is empty</div>
+        <div style="margin-bottom:14px">Add items by tapping ★ on any size, or use the AI search to find your favorites.</div>
+        <button class="sb-add-btn" style="margin:0;display:inline-block;width:auto;padding:10px 18px" onclick="switchSbTab('all')">Browse all items →</button>
+      </div>`;
+    } else {
+      el.innerHTML=`<div class="sb-empty">No items match your search.</div>`;
+    }
+    return;
+  }
   el.innerHTML=items.map(s=>`
     <div class="size-card${favorites.has(s.id)?' fav-card':''}" draggable="true" id="card-${s.id}"
       style="--cc:${s.color}"
@@ -1211,7 +1216,6 @@ function openAiModal(prefill=''){
   document.getElementById('ai-results').innerHTML='';
   document.getElementById('ai-status').innerHTML='';
   setTimeout(()=>inp.focus(),120);
-  if(prefill) runAiLookup();
 }
 function closeAiModal(){document.getElementById('ai-modal').classList.remove('open');}
 
