@@ -1121,19 +1121,112 @@ function drawTop(s,mode){
   </svg>`;
 }
 function drawBottom(s,mode){
-  const slot=mode==='slot';const col=s.color;const sc=slot?1.0:0.82;
-  const w=(s.dims['Waist']||80)*sc;const h=(s.dims['Hip']||96)*sc;
-  const ins=(s.dims['Inseam']||78)*sc;const th=(s.dims['Thigh']||58)*sc;
-  const W=w*.36;const H=h*.28;const IL=ins*.38;const TH=th*.25;
-  const vw=H+24;const vh=H*.5+IL+22;const cx=vw/2;
-  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'200px':'160px'}">
-    <defs><linearGradient id="bg${s.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".88"/><stop offset="100%" stop-color="${col}" stop-opacity=".62"/></linearGradient></defs>
-    <rect x="${cx-W/2}" y="8" width="${W}" height="${H*.13}" rx="3" fill="${col}" opacity=".88"/>
-    <path d="M${cx-W/2} ${8+H*.13}Q${cx-H*.3} ${8+H*.5} ${cx-TH/2} ${8+H*.5}L${cx-TH/2+TH*.18} ${8+H*.5+IL}Q${cx} ${8+H*.5+IL+7} ${cx-TH*.14} ${8+H*.5+IL}L${cx-2} ${8+H*.5+4}" fill="url(#bg${s.id})" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
-    <path d="M${cx+W/2} ${8+H*.13}Q${cx+H*.3} ${8+H*.5} ${cx+TH/2} ${8+H*.5}L${cx+TH/2-TH*.18} ${8+H*.5+IL}Q${cx} ${8+H*.5+IL+7} ${cx+TH*.14} ${8+H*.5+IL}L${cx+2} ${8+H*.5+4}" fill="url(#bg${s.id})" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
-    <path d="M${cx-2} ${8+H*.5+4}Q${cx} ${8+H*.5+14} ${cx+2} ${8+H*.5+4}" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="1.2"/>
-    ${slot?`<line x1="${cx-W/2}" y1="${8+H*.13}" x2="${cx+W/2}" y2="${8+H*.13}" stroke="rgba(0,0,0,.14)" stroke-width=".7" stroke-dasharray="3,2"/>
-    <text x="${cx}" y="${8+H*.13-2}" text-anchor="middle" font-size="9" fill="rgba(0,0,0,.4)" font-family="Inter,sans-serif" font-weight="500">${s.dims['Waist']}cm</text>`:''}
+  const slot=mode==='slot';
+  const col=s.color;
+
+  // Real measurements (cm) — fall back to typical values if missing
+  const waist=s.dims['Waist']||80;
+  const hip=s.dims['Hip']||(waist+18);
+  const inseam=s.dims['Inseam']||78;
+  const thigh=s.dims['Thigh']||(hip*0.6);
+  const legOpening=s.dims['Leg Opening']||(thigh*0.62);
+
+  // Layout — viewBox dims in arbitrary units, scale to fit
+  // Pants are drawn as flat-lay: rise (waist→crotch) + leg length below
+  const sc=slot?1.0:0.85;
+  const halfHip=hip/2*sc;
+  const halfWaist=waist/2*sc;
+  const halfThigh=thigh/2*sc;
+  const halfLeg=legOpening/2*sc;
+  const rise=Math.max(28,(hip-waist)*0.9+24)*sc;  // crotch depth, scales with size diff
+  const legLen=inseam*sc*.85;
+
+  const padX=24, padY=18;
+  const vw=halfHip*2+padX*2;
+  const vh=rise+legLen+padY*2+18;
+  const cx=vw/2;
+  const yTop=padY;
+  const yWaistEnd=yTop+8;          // waistband bottom
+  const yHip=yTop+rise*.55;        // widest point
+  const yCrotch=yTop+rise;         // start of legs
+  const yBot=yCrotch+legLen;       // bottom of legs
+
+  // Slight inner gap between the two legs
+  const gap=Math.max(2,halfLeg*.15);
+
+  // Coordinates of the leg outlines
+  const xLeftWaist=cx-halfWaist;
+  const xRightWaist=cx+halfWaist;
+  const xLeftHip=cx-halfHip;
+  const xRightHip=cx+halfHip;
+  const xLeftInnerCrotch=cx-gap;
+  const xRightInnerCrotch=cx+gap;
+  const xLeftOuterCrotch=cx-halfThigh;
+  const xRightOuterCrotch=cx+halfThigh;
+  const xLeftFootOut=cx-halfLeg-gap;
+  const xLeftFootIn=cx-gap*.5;
+  const xRightFootIn=cx+gap*.5;
+  const xRightFootOut=cx+halfLeg+gap;
+
+  // Tapering depends on hip vs leg opening — slim if difference is large
+  const taperLeft=halfThigh-(halfLeg+gap*.5);
+  const taperRight=halfThigh-(halfLeg+gap*.5);
+
+  return`<svg viewBox="0 0 ${vw} ${vh}" style="max-width:100%;max-height:${slot?'220px':'170px'}">
+    <defs>
+      <linearGradient id="bg${s.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${col}" stop-opacity=".95"/>
+        <stop offset="100%" stop-color="${col}" stop-opacity=".62"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Left leg -->
+    <path d="
+      M ${xLeftWaist} ${yTop}
+      L ${xLeftHip} ${yHip}
+      L ${xLeftOuterCrotch} ${yCrotch}
+      L ${xLeftFootOut} ${yBot}
+      L ${xLeftFootIn} ${yBot}
+      L ${xLeftInnerCrotch} ${yCrotch}
+      L ${cx-gap*.4} ${yWaistEnd}
+      Z
+    " fill="url(#bg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+
+    <!-- Right leg -->
+    <path d="
+      M ${xRightWaist} ${yTop}
+      L ${xRightHip} ${yHip}
+      L ${xRightOuterCrotch} ${yCrotch}
+      L ${xRightFootOut} ${yBot}
+      L ${xRightFootIn} ${yBot}
+      L ${xRightInnerCrotch} ${yCrotch}
+      L ${cx+gap*.4} ${yWaistEnd}
+      Z
+    " fill="url(#bg${s.id})" stroke="rgba(0,0,0,.07)" stroke-width="1" stroke-linejoin="round"/>
+
+    <!-- Waistband strip -->
+    <path d="M ${xLeftWaist} ${yTop} L ${xRightWaist} ${yTop} L ${xRightWaist+1} ${yWaistEnd} L ${xLeftWaist-1} ${yWaistEnd} Z"
+      fill="${col}" opacity=".95" stroke="rgba(0,0,0,.08)" stroke-width=".8"/>
+
+    <!-- Center seam (subtle) -->
+    <line x1="${cx}" y1="${yWaistEnd}" x2="${cx}" y2="${yCrotch-1}" stroke="rgba(0,0,0,.13)" stroke-width=".7" stroke-dasharray="2,3"/>
+    <!-- Button -->
+    <circle cx="${cx}" cy="${yTop+4}" r="1.5" fill="rgba(0,0,0,.35)"/>
+
+    ${slot?`
+    <!-- Waist measurement line at top -->
+    <line x1="${xLeftWaist}" y1="${yTop-7}" x2="${xRightWaist}" y2="${yTop-7}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+    <line x1="${xLeftWaist}" y1="${yTop-10}" x2="${xLeftWaist}" y2="${yTop-3}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+    <line x1="${xRightWaist}" y1="${yTop-10}" x2="${xRightWaist}" y2="${yTop-3}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+    <text x="${cx}" y="${yTop-11}" text-anchor="middle" font-size="9" fill="rgba(0,0,0,.5)" font-family="Inter,sans-serif" font-weight="500">W ${waist}cm</text>
+
+    <!-- Inseam label on inner leg -->
+    <text x="${cx-halfThigh*.55}" y="${(yCrotch+yBot)/2}" text-anchor="end" font-size="8" fill="rgba(0,0,0,.42)" font-family="Inter,sans-serif" font-weight="500">↕ ${inseam}cm</text>
+
+    <!-- Leg opening at bottom -->
+    <line x1="${xLeftFootOut-2}" y1="${yBot+8}" x2="${xLeftFootIn+2}" y2="${yBot+8}" stroke="rgba(0,0,0,.3)" stroke-width=".7"/>
+    <text x="${(xLeftFootOut+xLeftFootIn)/2}" y="${yBot+16}" text-anchor="middle" font-size="8" fill="rgba(0,0,0,.42)" font-family="Inter,sans-serif" font-weight="500">${legOpening}cm</text>
+    `:''}
   </svg>`;
 }
 function drawShoe(s,mode){
@@ -1249,11 +1342,27 @@ async function runAiLookup(){
     btn.disabled=false;return;
   }
 
-  const systemPrompt=`You are a clothing measurements expert. The user will give you a clothing model name or search query.
-Search the web to find the official size measurements for that specific clothing item.
-Return ONLY a valid JSON array (no markdown, no explanation) with this exact structure:
-[{"brand":"Brand","name":"Product","size":"M","cat":"top|bottom|shoe|jacket|dress","retailer":"domain","source":"URL","dims":{"Chest":100,"Shoulder":44}}]
-Include all available sizes. Convert inches to cm (×2.54). Use only the dimension keys relevant to the category. Return 1-8 results. Return ONLY the JSON array.`;
+  const systemPrompt=`You are a clothing measurements expert. The user gives you a brand/product search query. Find the official size measurements.
+
+CRITICAL RULES:
+
+1. Search the brand's official size guide, fit guide, or product specifications page.
+2. NEVER return 0 or null for any dimension. If you cannot find a real measurement for a key, OMIT it from the dims object entirely. Missing > fake zero.
+3. Convert all measurements to centimeters (1 inch = 2.54 cm).
+4. Return one entry per available size (XS, S, M, L, XL, etc.)
+
+Dimension keys per category:
+- top: Chest, Shoulder, Length, Sleeve, Hem
+- bottom: Waist, Hip, Inseam, Thigh, Leg Opening
+  (If only the size label is W30L32, convert: W30 = ~76cm waist, L32 = ~81cm inseam)
+- shoe: Length, Width, Heel Height, Toe Box
+- jacket: Chest, Shoulder, Length, Sleeve, Hem, Back Width
+- dress: Chest, Waist, Hip, Length, Shoulder
+
+Return ONLY a valid JSON array (no markdown, no preamble), e.g.:
+[{"brand":"Brand","name":"Product","size":"M","cat":"top","retailer":"domain","source":"URL","dims":{"Chest":100,"Shoulder":44}}]
+
+Return 1-8 results. If you cannot find anything, return [].`;
 
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1281,6 +1390,10 @@ Include all available sizes. Convert inches to cm (×2.54). Use only the dimensi
 function renderAiCard(item,idx){
   const dims=item.dims||{};
   const dimKeys=Object.keys(dims).filter(k=>dims[k]&&dims[k]>0);
+  const cat=item.cat||'top';
+  const expectedCount=(DIM_DEFS[cat]||[]).length;
+  const fewMeasurements=dimKeys.length<2;
+  const partial=dimKeys.length<expectedCount&&dimKeys.length>=2;
   return`
   <div class="ai-result-card" id="ai-card-${idx}">
     <div class="ai-rc-hd">
@@ -1294,6 +1407,14 @@ function renderAiCard(item,idx){
         <button class="ai-rc-fav" id="ai-fav-${idx}" title="Mark as in my wardrobe" onclick="toggleAiFav(${idx})">★</button>
       </div>
     </div>
+    ${dimKeys.length===0?
+      `<div style="padding:14px 18px;font-size:13px;color:var(--bad);background:rgba(168,85,68,.06)">⚠ No measurements found on the page. We'll estimate from the size label when adding.</div>`
+      : fewMeasurements?
+      `<div style="padding:10px 18px;font-size:12px;color:var(--warn);background:rgba(184,132,58,.08)">⚠ Only partial measurements found — missing values will be estimated.</div>`
+      : partial?
+      `<div style="padding:8px 18px;font-size:11px;color:var(--ink3);font-style:italic">${dimKeys.length} of ${expectedCount} measurements found · others will be estimated</div>`
+      : ''
+    }
     <div class="ai-rc-dims">
       ${dimKeys.map(k=>`<div class="ai-rc-dim"><div class="ai-rc-dim-lbl">${k}</div><div class="ai-rc-dim-val">${dims[k]} cm</div></div>`).join('')}
     </div>
@@ -1311,18 +1432,76 @@ function toggleAiFav(idx){
   else{_aiFavSet.add(idx);btn.classList.add('on');btn.title='In Wardrobe ★';}
 }
 
+// Estimate missing measurements from the size label when possible.
+// Only fills in safe approximations to keep the SVG drawings reasonable.
+function _estimateMissingDims(item, dims){
+  const cat=item.cat||'top';
+  const sizeStr=String(item.size||'').trim();
+
+  if(cat==='bottom'){
+    // Parse W30L32, 30x32, 30/32, "30", etc.
+    const m=sizeStr.match(/W?\s*(\d{2,3})\s*[xX×\/L\s-]*\s*(\d{2})?/);
+    if(m){
+      const w=parseInt(m[1],10);
+      const l=m[2]?parseInt(m[2],10):null;
+      // Waist in inches → cm (jeans use waist size in inches typically)
+      if(w>=24&&w<=50){
+        if(!dims['Waist'])dims['Waist']=Math.round(w*2.54);
+        if(!dims['Hip'])dims['Hip']=Math.round((w+8)*2.54);          // hip ~8" larger than waist
+        if(!dims['Thigh'])dims['Thigh']=Math.round((w*0.7)*2.54);    // rough proportion
+        if(!dims['Leg Opening'])dims['Leg Opening']=Math.round((w*0.45)*2.54);
+      }
+      if(l&&l>=26&&l<=38){
+        if(!dims['Inseam'])dims['Inseam']=Math.round(l*2.54);
+      }
+    }
+    // EU sizes like 36, 38, 40 (women's pants)
+    else {
+      const eu=parseInt(sizeStr,10);
+      if(eu>=32&&eu<=52){
+        if(!dims['Waist'])dims['Waist']=Math.round(64+(eu-32)*2);
+        if(!dims['Hip'])dims['Hip']=Math.round(86+(eu-32)*2);
+        if(!dims['Inseam'])dims['Inseam']=78;
+        if(!dims['Thigh'])dims['Thigh']=Math.round(54+(eu-32)*1.2);
+        if(!dims['Leg Opening'])dims['Leg Opening']=Math.round(32+(eu-32)*0.4);
+      }
+    }
+  }
+  return dims;
+}
+
 // Helper — adds the item to the catalog and returns the new id.
-// Switches to the right category if needed so the item is visible.
+// Keeps only the dimensions the AI actually provided, estimates missing ones from size,
+// and never inserts 0 values that would distort the visual.
 function _addAiToCatalog(idx){
   const item=_aiLastResults[idx];
   if(!item)return null;
   const cat=item.cat||'top';
-  const validDims=DIM_DEFS[cat]||DIM_DEFS['top'];
-  const dims={};
-  validDims.forEach(d=>{dims[d]=parseFloat(item.dims?.[d])||0;});
+  const validKeys=DIM_DEFS[cat]||DIM_DEFS['top'];
+  let dims={};
+  // Keep only real, non-zero AI-provided values
+  validKeys.forEach(k=>{
+    const v=parseFloat(item.dims?.[k]);
+    if(!isNaN(v)&&v>0)dims[k]=v;
+  });
+  // Try to estimate the missing ones from size/label
+  dims=_estimateMissingDims(item,dims);
+  // If still empty (no usable data), fall back to category averages so SVG doesn't crash
+  if(Object.keys(dims).length===0){
+    const fallbacks={
+      top:{Chest:100,Shoulder:44,Length:70,Sleeve:22,Hem:96},
+      bottom:{Waist:80,Hip:98,Inseam:78,Thigh:58,'Leg Opening':35},
+      shoe:{Length:27,Width:9.8,'Heel Height':2.8,'Toe Box':9.5},
+      jacket:{Chest:104,Shoulder:46,Length:75,Sleeve:62,Hem:102,'Back Width':44},
+      dress:{Chest:88,Waist:72,Hip:96,Length:110,Shoulder:37}
+    };
+    dims={...fallbacks[cat]};
+    item._estimated=true;
+  }
+
   const col=PAL[CATALOG.length%PAL.length];
   const id='ai'+Date.now()+idx;
-  CATALOG.push({id,cat,brand:item.brand||'Unknown',name:item.name||'Item',size:item.size||'—',retailer:item.retailer||'web',color:col,dims});
+  CATALOG.push({id,cat,brand:item.brand||'Unknown',name:item.name||'Item',size:item.size||'—',retailer:item.retailer||'web',color:col,dims,_partial:Object.keys(dims).length<validKeys.length});
   if(_aiFavSet.has(idx))favorites.add(id);
   return {id,cat};
 }
@@ -1422,10 +1601,39 @@ async function runUrlLookup(){
   if(!apiKey){statusEl.innerHTML='';resultsEl.innerHTML=`<div class="ai-error">Please enter your Anthropic API key above first.</div>`;btn.disabled=false;return;}
 
   const systemPrompt=`You are a clothing measurements expert with web browsing.
-The user will give you a URL to a clothing product page. Fetch the page and extract all size measurements.
-Return ONLY a valid JSON array:
-[{"brand":"Brand","name":"Product","size":"M","cat":"top|bottom|shoe|jacket|dress","retailer":"domain","source":"URL","dims":{"Chest":100,"Shoulder":44}}]
-Rules: One entry per available size. Convert all measurements to cm. Use dimension keys appropriate for the category (top: Chest,Shoulder,Length,Sleeve,Hem | bottom: Waist,Hip,Inseam,Thigh,Leg Opening | shoe: Length,Width,Heel Height,Toe Box | jacket: Chest,Shoulder,Length,Sleeve,Hem,Back Width | dress: Chest,Waist,Hip,Length,Shoulder). Omit unknown dimensions. Return 1-10 results. ONLY the JSON array.`;
+The user gives you a URL to a clothing product page. You must fetch the page AND find the official size measurements for that exact product.
+
+CRITICAL RULES — read carefully:
+
+1. Many product pages don't show measurements directly. You MUST search for them in these places, in order:
+   a) The product page's "Size guide", "Size chart", "Fit & sizing", or "Measurements" tab/section
+   b) The brand's general size guide page (search the brand's website for "size guide" + product type)
+   c) Independent sizing databases (Zalando, ASOS, retailer-specific size guides)
+   d) The brand's official product specifications
+
+2. NEVER return 0 or null for any dimension. If you cannot find a real measurement, OMIT that dimension from the dims object entirely. An empty/missing field is far better than a fake zero.
+
+3. Convert all measurements to centimeters (1 inch = 2.54 cm, 1 mm = 0.1 cm).
+
+4. For pants/jeans/trousers (cat: "bottom"), the dimension keys are: Waist, Hip, Inseam, Thigh, Leg Opening
+   - "Waist" = waistband measurement (laid flat × 2, OR full circumference)
+   - "Hip" = hip measurement at the widest point
+   - "Inseam" = inner leg seam length
+   - "Thigh" = thigh circumference
+   - "Leg Opening" = ankle/cuff opening (laid flat × 2)
+   - If only the size label is W30L32, convert: W30 = ~76cm waist, L32 = ~81cm inseam
+
+5. For tops (cat: "top"), the dimension keys are: Chest, Shoulder, Length, Sleeve, Hem
+6. For shoes (cat: "shoe"), keys: Length, Width, Heel Height, Toe Box
+7. For jackets (cat: "jacket"), keys: Chest, Shoulder, Length, Sleeve, Hem, Back Width
+8. For dresses (cat: "dress"), keys: Chest, Waist, Hip, Length, Shoulder
+
+9. Return ONE entry per available size. If the page lists S/M/L/XL, return 4 entries.
+
+Return ONLY a valid JSON array (no markdown, no preamble), like:
+[{"brand":"Levi's","name":"Ribcage Wide Leg","size":"W28 L32","cat":"bottom","retailer":"zalando.fr","source":"URL","dims":{"Waist":71,"Hip":94,"Inseam":81}}]
+
+If you genuinely cannot find any measurements anywhere, return an empty array [].`;
 
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{
