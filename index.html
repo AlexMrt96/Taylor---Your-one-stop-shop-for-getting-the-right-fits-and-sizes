@@ -1250,7 +1250,7 @@ Include all available sizes. Convert inches to cm (×2.54). Use only the dimensi
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Find size measurements for: ${query}`}]})
+      body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:1500,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Find size measurements for: ${query}`}]})
     });
     if(!response.ok){const err=await response.json();throw new Error(err.error?.message||`API error ${response.status}`);}
     const data=await response.json();
@@ -1374,7 +1374,7 @@ Rules: One entry per available size. Convert all measurements to cm. Use dimensi
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Please fetch this product page and extract all size measurements: ${url}`}]})
+      body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:2000,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Please fetch this product page and extract all size measurements: ${url}`}]})
     });
     if(!response.ok){const err=await response.json();throw new Error(err.error?.message||`API error ${response.status}`);}
     const data=await response.json();
