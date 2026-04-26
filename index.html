@@ -312,8 +312,17 @@ header{background:var(--surface);height:68px;display:flex;align-items:center;pad
 .ai-rc-fav{background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer;transition:all .15s;line-height:1;flex-shrink:0;}
 .ai-rc-fav:hover{background:var(--accent-soft);transform:scale(1.08);}
 .ai-rc-fav.on{background:var(--accent-soft);border-color:var(--accent);}
-.ai-rc-add{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-family:var(--ssf);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
-.ai-rc-add:hover{background:var(--accent2);}
+
+/* Two-button action area on AI result cards */
+.ai-rc-actions{display:flex;gap:8px;padding:0 18px 16px;border-top:1px solid var(--line);padding-top:14px;margin-top:4px;}
+.ai-rc-btn{flex:1;padding:11px 14px;border-radius:var(--rsm);font-family:var(--ssf);font-size:13px;font-weight:500;letter-spacing:.1px;cursor:pointer;transition:all .15s;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.ai-rc-btn-primary{background:var(--accent);color:#fff;flex:1.4;}
+.ai-rc-btn-primary:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(154,123,79,.25);}
+.ai-rc-btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.ai-rc-btn-ghost{background:transparent;color:var(--ink2);border-color:var(--line2);}
+.ai-rc-btn-ghost:hover:not(:disabled){background:var(--bg2);color:var(--ink);}
+.ai-rc-btn-ghost:disabled{opacity:.5;cursor:not-allowed;}
+.ai-rc-btn.added{background:var(--good);color:#fff;border-color:var(--good);cursor:default;}
 
 .ai-rc-dims{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;}
 .ai-rc-dim{background:var(--bg2);border-radius:6px;padding:6px 12px;}
@@ -1282,14 +1291,17 @@ function renderAiCard(item,idx){
       </div>
       <div class="ai-rc-right">
         <div class="ai-rc-size">${item.size||'—'}</div>
-        <button class="ai-rc-fav" id="ai-fav-${idx}" title="Add to Wardrobe" onclick="toggleAiFav(${idx})">★</button>
-        <button class="ai-rc-add" id="ai-add-${idx}" onclick="addAiResult(${idx},false)">+ Add</button>
+        <button class="ai-rc-fav" id="ai-fav-${idx}" title="Mark as in my wardrobe" onclick="toggleAiFav(${idx})">★</button>
       </div>
     </div>
     <div class="ai-rc-dims">
       ${dimKeys.map(k=>`<div class="ai-rc-dim"><div class="ai-rc-dim-lbl">${k}</div><div class="ai-rc-dim-val">${dims[k]} cm</div></div>`).join('')}
     </div>
     ${item.source?`<div class="ai-rc-source">Source: ${item.source}</div>`:''}
+    <div class="ai-rc-actions">
+      <button class="ai-rc-btn ai-rc-btn-primary" id="ai-compare-${idx}" onclick="compareAiResult(${idx})">→ Compare now</button>
+      <button class="ai-rc-btn ai-rc-btn-ghost" id="ai-save-${idx}" onclick="saveAiResult(${idx})">Save to library</button>
+    </div>
   </div>`;
 }
 
@@ -1299,9 +1311,11 @@ function toggleAiFav(idx){
   else{_aiFavSet.add(idx);btn.classList.add('on');btn.title='In Wardrobe ★';}
 }
 
-function addAiResult(idx,asFav){
+// Helper — adds the item to the catalog and returns the new id.
+// Switches to the right category if needed so the item is visible.
+function _addAiToCatalog(idx){
   const item=_aiLastResults[idx];
-  if(!item)return;
+  if(!item)return null;
   const cat=item.cat||'top';
   const validDims=DIM_DEFS[cat]||DIM_DEFS['top'];
   const dims={};
@@ -1309,10 +1323,53 @@ function addAiResult(idx,asFav){
   const col=PAL[CATALOG.length%PAL.length];
   const id='ai'+Date.now()+idx;
   CATALOG.push({id,cat,brand:item.brand||'Unknown',name:item.name||'Item',size:item.size||'—',retailer:item.retailer||'web',color:col,dims});
-  if(_aiFavSet.has(idx)||asFav)favorites.add(id);
+  if(_aiFavSet.has(idx))favorites.add(id);
+  return {id,cat};
+}
+
+// Primary action: add the item AND drop it into the next empty compare slot,
+// then close the modal so the user sees the comparison immediately.
+function compareAiResult(idx){
+  const result=_addAiToCatalog(idx);
+  if(!result)return;
+  const {id,cat}=result;
+
+  // Switch to the right category pill if the user is on a different one
+  if(currentCat!==cat){
+    currentCat=cat;
+    const catLabels={top:'Tops',bottom:'Bottoms',shoe:'Shoes',jacket:'Jackets',dress:'Dresses'};
+    document.querySelectorAll('.cat-pill').forEach(p=>{
+      p.classList.toggle('active', p.textContent.trim()===catLabels[cat]);
+    });
+    renderFilters();
+  }
+
+  // Find the next empty slot, or replace slot C (index 2) if all are full
+  let slotIdx=slots.indexOf(null);
+  if(slotIdx===-1)slotIdx=2;
+  slots[slotIdx]=id;
+  renderSlot(slotIdx);
+  renderBottom();
+  renderCards();
+
+  // Mark the button as done visually
+  const btn=document.getElementById(`ai-compare-${idx}`);
+  if(btn){btn.textContent='✓ In Slot '+'ABC'[slotIdx];btn.classList.add('added');btn.disabled=true;}
+  const saveBtn=document.getElementById(`ai-save-${idx}`);
+  if(saveBtn){saveBtn.textContent='✓ Also saved';saveBtn.disabled=true;}
+
+  // Close the modal so the user can see the comparison
+  setTimeout(()=>closeAiModal(),450);
+}
+
+// Secondary action: save to library only, keep modal open to keep browsing.
+function saveAiResult(idx){
+  const result=_addAiToCatalog(idx);
+  if(!result)return;
+  const {cat}=result;
   if(currentCat===cat)renderCards();
-  const addBtn=document.getElementById(`ai-add-${idx}`);
-  if(addBtn){addBtn.textContent=(_aiFavSet.has(idx)||asFav)?'✓ Added to Wardrobe':'✓ Added';addBtn.style.background='var(--good)';addBtn.style.color='#fff';addBtn.disabled=true;}
+  const btn=document.getElementById(`ai-save-${idx}`);
+  if(btn){btn.textContent=_aiFavSet.has(idx)?'✓ Saved to wardrobe':'✓ Saved to library';btn.classList.add('added');btn.disabled=true;}
 }
 
 // API KEY
